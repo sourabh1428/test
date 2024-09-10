@@ -19,7 +19,7 @@ const mailOptions = {
   html: `
     <h1>Hello,</h1>
     <p>This email contains a tracking pixel!</p>
-    <img src="http://your-server.com/track?email=recipient@example.com" alt="." width="1" height="1" style="display:none;" />
+    <img src=http://your-server.com/track?email=${to}" alt="." width="1" height="1" style="display:none;" />
   `
 };
 
