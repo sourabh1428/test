@@ -14,17 +14,17 @@ const transporter = nodemailer.createTransport({
 // Create email options
 
 //<img src="https://email-tracker-x6i3.onrender.com/track?email=${encodeURIComponent(toEmail)}" alt="." width="1" height="1" style="display:none;" />
-
+//<img src="http://localhost:3000/track?email=${encodeURIComponent(toEmail)}" alt="." width="1" height="1" style="display:none;" />
 function sendEmail(toEmail) {
     // Create email options with dynamic 'to' email
     const mailOptions = {
       from: 'sppathak1428@gmail.com',  // Your email
       to: toEmail,  // Recipient's email passed as a parameter
-      subject: 'Email with tracking pixel',
+      subject: 'Lavda tracking',
       html: `
         <h1>Hello,</h1>
-        <p>This email contains a tracking pixel!</p>
-        <img src="http://localhost:3000/track?email=${encodeURIComponent(toEmail)}" alt="." width="1" height="1" style="display:none;" />
+        <p>Apni maa chudao , tera email open track kr raha hu</p>
+        <img src="https://email-tracker-x6i3.onrender.com/track?email=${encodeURIComponent(toEmail)}" alt="." width="1" height="1" style="display:none;" />
       `
     };
   
@@ -39,5 +39,5 @@ function sendEmail(toEmail) {
   }
   
   // Example usage: Sending to a dynamic email address
-  const recipientEmail = 'spsourabh1428@gmail.com';
+  const recipientEmail = 'tneeraj2001@gmail.com';
   sendEmail(recipientEmail);

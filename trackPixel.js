@@ -5,6 +5,7 @@ const app = express();
 // Route for tracking pixel
 app.get('/track', (req, res) => {
   const email = req.query.email;
+  console.log("TRACKING");
   
   // Log the email open
   console.log(`Email opened by: ${email} at ${new Date().toISOString()}`);
