@@ -4,7 +4,7 @@ services:
     env: go
     plan: free
     buildCommand: go build -o main .
-    startCommand: ./trackPixel
+    startCommand: ./main
     envVars:
       - key: GO_ENV
         value: production
