@@ -27,12 +27,12 @@ func trackHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/track", trackHandler)
 
-	// Get the port from the environment variable or default to 3000
-	port := os.Getenv("process.env.PORT")
+	// Get the port from the environment variable
+	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "10000" // Default to port 10000 if PORT is not set
 	}
 
 	log.Printf("Server starting on port %s...\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, nil)) // Bind to 0.0.0.0 to listen on all interfaces
 }
