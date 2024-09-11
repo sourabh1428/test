@@ -28,7 +28,7 @@ func main() {
 	http.HandleFunc("/track", trackHandler)
 
 	// Get the port from the environment variable or default to 3000
-	port := os.Getenv("PORT")
+	port := os.Getenv("process.env.PORT")
 	if port == "" {
 		port = "3000"
 	}
