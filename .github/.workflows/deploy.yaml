@@ -35,7 +35,7 @@ jobs:
           aws elasticbeanstalk create-application-version \
             --application-name email-track \
             --version-label ${{ github.sha }} \
-            --source-bundle S3Bucket=your-bucket-name,S3Key=trackPixel.zip
+            --source-bundle S3Bucket=sourabh1428-test,S3Key=trackPixel.zip
 
           # Update the environment to use the new version
           aws elasticbeanstalk update-environment \
