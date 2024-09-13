@@ -19,7 +19,9 @@ app.get('/hue', (req, res) => {
 app.get('/pue', (req, res) => {
   res.send('piduuuu!!!!!!!!!!');
 });
-
+app.get('/jue', (req, res) => {
+  res.send('hahahahahah!!!!!!!!!!');
+});
 
 // Sample POST route
 app.post('/data', (req, res) => {

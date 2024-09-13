@@ -24,12 +24,12 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Deploy and Start Application
       run: |
         # Change to the deployment directory
-        cd /home/ubuntu/actions-runner-backend/_work/test
+        cd /home/ubuntu/actions-runner-backend/_work/test/test
 
         # Stop any existing PM2 process if it exists
         pm2 stop index || true
