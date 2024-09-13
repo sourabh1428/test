@@ -32,7 +32,7 @@ jobs:
         cd /home/ubuntu/actions-runner-backend/_work/test/test
 
         # Stop any existing PM2 process if it exists
-        pm2 stop index || true
+      
 
         # Start the new application
         pm2 stop chal
