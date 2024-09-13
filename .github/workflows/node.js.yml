@@ -28,9 +28,10 @@ jobs:
 
     - name: Deploy and Start Application
       run: |
-        # Change to the deployment directory
         cd /home/ubuntu/actions-runner-backend/_work/test/test
-
-        pm2 restart chal
+        # Start or restart the application
+        pm2 stop index || true
+        pm2 start index.js --name index
+        pm2 save
       env:
         PM2_HOME: ~/.pm2
