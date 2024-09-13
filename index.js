@@ -16,6 +16,11 @@ app.get('/hue', (req, res) => {
   res.send('hueheuehuehuheuheuheuhuh');
 });
 
+app.get('/pue', (req, res) => {
+  res.send('piduuuu!!!!!!!!!!');
+});
+
+
 // Sample POST route
 app.post('/data', (req, res) => {
   const { name, age } = req.body;
