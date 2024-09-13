@@ -11,11 +11,12 @@ jobs:
     strategy:
       matrix:
         node-version: [18.1]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
     - uses: actions/checkout@v4
       name: Checkout code
+      with:
+        path: /home/ubuntu/actions-runner-backend/_work/test
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
@@ -25,13 +26,14 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test
 
     - name: Deploy and Start Application
       run: |
         # Change to the deployment directory
         cd /home/ubuntu/actions-runner-backend/_work/test
         
-        # Stop any existing PM2 process
+        # Stop any existing PM2 process if it exists
         pm2 stop index || true
         
         # Start the new application
