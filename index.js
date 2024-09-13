@@ -20,7 +20,7 @@ app.get('/pue', (req, res) => {
   res.send('piduuuu!!!!!!!!!!');
 });
 app.get('/jue', (req, res) => {
-  res.send('hahahahahah!!!!!!!!!!');
+  res.send('chummmii------------------------');
 });
 
 // Sample POST route

@@ -35,9 +35,8 @@ jobs:
         pm2 stop index || true
 
         # Start the new application
-        pm2 start index.js --name index
-
-        # Save the PM2 process list
-        pm2 save
+        pm2 stop chal
+        pm2 start chal
+        
       env:
         PM2_HOME: ~/.pm2
