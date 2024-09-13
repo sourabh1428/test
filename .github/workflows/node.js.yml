@@ -15,12 +15,29 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      name: Checkout code
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
-    - run: pm2 start index.js
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Deploy and Start Application
+      run: |
+        # Change to the deployment directory
+        cd /home/ubuntu/actions-runner-backend/_work/test
+        
+        # Stop any existing PM2 process
+        pm2 stop index || true
+        
+        # Start the new application
+        pm2 start index.js --name index
+        
+        # Save the PM2 process list
+        pm2 save
       env:
         PM2_HOME: ~/.pm2
