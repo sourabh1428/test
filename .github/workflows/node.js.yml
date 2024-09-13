@@ -13,8 +13,8 @@ jobs:
         node-version: [18.1]
 
     steps:
-    - uses: actions/checkout@v4
-      name: Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v4
       with:
         path: /home/ubuntu/actions-runner-backend/_work/test
 
