@@ -31,13 +31,6 @@ jobs:
         # Change to the deployment directory
         cd /home/ubuntu/actions-runner-backend/_work/test/test
 
-        # Stop any existing PM2 process if it exists
-        pm2 stop chal || true
-
-        # Start the new application
-        pm2 start index.js --name chal
-
-        # Save the PM2 process list
-        pm2 save
+        pm2 restart chal
       env:
         PM2_HOME: ~/.pm2
