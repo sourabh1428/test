@@ -28,8 +28,6 @@ jobs:
 
     - name: Deploy and Start Application
       run: |
-        pm2 delete all
-        pm2 kill
-        pm2 start /home/ubuntu/actions-runner-backend/_work/test/test/index.js --name index
+       
       env:
         PM2_HOME: ~/.pm2
