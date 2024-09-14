@@ -9,6 +9,7 @@ module.exports = {
         max_memory_restart: '1G',    // Restart the app if it exceeds 1GB memory usage
         env: {                       // Environment variables for default mode
           NODE_ENV: 'development',
+          NAME: process.env.name,
           PORT: 3000
         },
         env_production: {            // Environment variables for production mode
