@@ -17,7 +17,7 @@ app.get('/khushi', (req, res) => {
 });
 
 app.get('/pue', (req, res) => {
-  res.send('puep222uepuepuepuepuepuepuepuepuep1213123213');
+  res.send('puep222uepuepuepuepuepuep123uepuepuep1213123213');
 });
 app.get('/jue', (req, res) => {
   res.send('123');
