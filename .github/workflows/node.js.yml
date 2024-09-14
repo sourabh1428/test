@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18] # General version, not a specific patch
+        node-version: [18]
 
     steps:
     - name: Checkout code
@@ -30,11 +30,16 @@ jobs:
       run: npm install -g pm2
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
-    - name: Deploy and Start Application with PM2
+    - name: Start or Restart Application with PM2
       run: |
-        pm2 restart ecosystem.config.js --env development
+        pm2 start ecosystem.config.js --env development || pm2 restart ecosystem.config.js --env development
         pm2 save
         pm2 list
       env:
         PM2_HOME: ~/.pm2
+        name: ${{ secrets.NAME }}  # This pulls 'name' from GitHub Secrets
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+
+    - name: Display PM2 logs
+      run: pm2 logs --lines 100
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
