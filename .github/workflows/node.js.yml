@@ -24,25 +24,24 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
-      working-directory: ${{ github.workspace }}
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Ensure PM2 is installed
       run: npm install -g pm2
-      working-directory: ${{ github.workspace }}
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
-    - name: Start Application with PM2
+    - name: Start or Restart Application with PM2
       run: |
-        if pm2 list | grep -q 'index'; then
-          echo "Application is already running. Restarting..."
-          pm2 restart ecosystem.config.js --env development
-        else
-          echo "Application is not running. Starting..."
-          pm2 start ecosystem.config.js --env development
-        fi
+        pm2 delete index || true  # Delete any existing process with the same name
+        pm2 start ecosystem.config.js --env development || pm2 restart ecosystem.config.js --env development
         pm2 save
         pm2 list
-      working-directory: ${{ github.workspace }}
+      env:
+        PM2_HOME: ~/.pm2
+        name: ${{ secrets.name }}  # This pulls 'name' from GitHub Secrets
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Display PM2 logs
-      run: pm2 logs --lines 100
-      working-directory: ${{ github.workspace }}
+      run: |
+        pm2 logs --lines 100
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
