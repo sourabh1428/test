@@ -32,14 +32,15 @@ jobs:
 
     - name: Start or Restart Application with PM2
       run: |
-          pm2 delete index || true
-          pm2 start ecosystem.config.js --env development || pm2 restart ecosystem.config.js --env development
-          pm2 save
-          pm2 list
+        pm2 delete index || true
+        pm2 start ./index.js --name index --watch --env development || pm2 restart index --env development
+        pm2 save
+        pm2 list
       env:
         PM2_HOME: ~/.pm2
-        name: ${{ secrets.name }}  # This pulls 'name' from GitHub Secrets
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+        NODE_ENV: development  # This sets the NODE_ENV environment variable
+        name: sourabh>ji
+        working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Display PM2 logs
       run: |
