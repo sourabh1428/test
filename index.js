@@ -17,7 +17,7 @@ app.get('/hue', (req, res) => {
 });
 
 app.get('/pue', (req, res) => {
-  res.send('piduuuu!!!!!!!!!!');
+  res.send('piduuuu!!!!!!!!!!11111111112332323');
 });
 app.get('/jue', (req, res) => {
   res.send('chummmii--------------12313123');
