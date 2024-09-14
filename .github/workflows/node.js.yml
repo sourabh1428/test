@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-    timeout-minutes: 1  # Set the timeout for the job
+    timeout-minutes: 3 # Set the timeout for the job
     strategy:
       matrix:
         node-version: [18]
