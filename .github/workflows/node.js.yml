@@ -30,6 +30,10 @@ jobs:
       run: npm install -g pm2
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
+    - name: Print environment variables
+      run: printenv
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+
     - name: Start or Restart Application with PM2
       run: |
         pm2 delete index || true
@@ -38,9 +42,9 @@ jobs:
         pm2 list
       env:
         PM2_HOME: ~/.pm2
-        NODE_ENV: development  # This sets the NODE_ENV environment variable
-        name: sourabh>ji
-        working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+        NODE_ENV: development
+        NAME: ${{ secrets.name }}  # Add 'name' from GitHub Secrets
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Display PM2 logs
       run: |
