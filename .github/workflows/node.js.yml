@@ -36,27 +36,27 @@ jobs:
 
     - name: Start or Restart Application with PM2
       run: |
-        # Ensure PM2 is using the correct home directory
-        export PM2_HOME=~/.pm2
-    
-        # Delete any existing 'index' process, ignore errors if it doesn't exist
-        pm2 delete index || true
-    
-        # Start or restart the Node.js application with PM2
-        pm2 start index.js --name index --watch --env development
-    
-        # Save the PM2 process list and force update
-        pm2 save -f
-    
-        # Display the list of processes managed by PM2
-        pm2 list
+          # Ensure PM2 is using the correct home directory
+          export PM2_HOME=~/.pm2
+
+          # Delete any existing 'index' process, ignore errors if it doesn't exist
+          pm2 delete index || true
+
+          # Start or restart the Node.js application with PM2
+          pm2 start index.js --name index --watch --env development
+
+          # Save the PM2 process list and force update
+          pm2 save -f
+
+          # Display the list of processes managed by PM2
+          pm2 list
       env:
+        PM2_HOME: ~/.pm2
         NODE_ENV: development
         NAME: ${{ secrets.NAME }}  # Add 'name' from GitHub Secrets
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
-    
+
     - name: Display PM2 logs
       run: |
-        # Display the logs for the PM2-managed processes
         pm2 logs --lines 100
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
