@@ -17,10 +17,10 @@ app.get('/hue', (req, res) => {
 });
 
 app.get('/pue', (req, res) => {
-  res.send('345');
+  res.send('piduruururururururururururururururururururururur');
 });
 app.get('/jue', (req, res) => {
-  res.send('123');
+  res.send('hueheueheuehueehueheu');
 });
 
 // Sample POST route
