@@ -12,8 +12,8 @@ app.get('/', (req, res) => {
   res.send(`made by ${process.env.NAME} , !!!!`)
 });
 
-app.get('/hue', (req, res) => {
-  res.send('123123hrwqerue2heuehuehuheuheuheuhuh');
+app.get('/khushi', (req, res) => {
+  res.send('kucchhhi');
 });
 
 app.get('/pue', (req, res) => {
