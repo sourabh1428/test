@@ -25,8 +25,12 @@ jobs:
     - name: Install dependencies
       run: npm ci
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
-
-    - name: Ensure PM2 is installed
+      
+    - name: List installed npm packages
+      run: npm list --depth=0
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+    - 
+      name: Ensure PM2 is installed
       run: npm install -g pm2
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
