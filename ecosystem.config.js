@@ -4,7 +4,6 @@ module.exports = {
       name: 'index',
       script: './index.js',
       instances: 'max',                // Auto-scale the number of instances
-      autorestart: true,
       watch: true,                     // Watch for file changes
       max_memory_restart: '1G',
       env: {
