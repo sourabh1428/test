@@ -40,8 +40,8 @@ jobs:
           export PM2_HOME=~/.pm2
 
           # Delete any existing 'index' process, ignore errors if it doesn't exist
-          pm2 delete index || true
-
+          pm2 delete all
+          pm2 save -f
           # Start or restart the Node.js application with PM2
           pm2 start index.js --name index --watch --env development
 
