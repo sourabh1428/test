@@ -39,6 +39,7 @@ jobs:
         pm2 delete index || true
         pm2 start ./index.js --name index --watch --env development || pm2 restart index --env development
         pm2 save
+        pm2 restart index
         pm2 list
       env:
         PM2_HOME: ~/.pm2
