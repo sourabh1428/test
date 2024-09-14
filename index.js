@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/hue', (req, res) => {
-  res.send('hueheuehuehuheuheuheuhuh');
+  res.send('123hueheuehuehuheuheuheuhuh');
 });
 
 app.get('/pue', (req, res) => {
