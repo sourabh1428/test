@@ -9,11 +9,11 @@ app.use(express.json());
 const port = process.env.PORT || 3000;
 // Simple GET route
 app.get('/', (req, res) => {
-  res.send(`Hello123!!!!! this is a simple API! by ${process.env.NAME} , !!!!`)
+  res.send(`Hello1123!!!!! this is a simple API! by ${process.env.NAME} , !!!!`)
 });
 
 app.get('/hue', (req, res) => {
-  res.send('123123hrwqerueheuehuehuheuheuheuhuh');
+  res.send('123123hrwqerue2heuehuehuheuheuheuhuh');
 });
 
 app.get('/pue', (req, res) => {
