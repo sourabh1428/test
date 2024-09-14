@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/khushi', (req, res) => {
-  res.send('kucchhhi');
+  res.send('kucchhhiiiiiiiiiiiiiiiiiiiii');
 });
 
 app.get('/pue', (req, res) => {
