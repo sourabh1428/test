@@ -30,8 +30,7 @@ jobs:
       run: |
         cd /home/ubuntu/actions-runner-backend/_work/test/test
         # Start or restart the application
-        pm2 stop index || true
-        pm2 start index.js --name index
-        pm2 save
+        pm2 restart index --update-env
+
       env:
         PM2_HOME: ~/.pm2
