@@ -34,14 +34,21 @@ jobs:
       run: printenv
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
+    - name: Check files in working directory
+      run: ls -la /home/ubuntu/actions-runner-backend/_work/test/test
+      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+
     - name: Start or Restart Application with PM2
       run: |
           # Ensure PM2 is using the correct home directory
-          export PM2_HOME=~/.pm2
+          export PM2_HOME=/home/ubuntu/.pm2
+
+          # Check if the PM2_HOME directory exists
+          ls -la /home/ubuntu/.pm2
 
           # Delete any existing 'index' process, ignore errors if it doesn't exist
-          pm2 delete all
-          pm2 save -f
+          pm2 delete all || true
+
           # Start or restart the Node.js application with PM2
           pm2 start index.js --name index --watch --env development
 
@@ -51,7 +58,7 @@ jobs:
           # Display the list of processes managed by PM2
           pm2 list
       env:
-        PM2_HOME: ~/.pm2
+        PM2_HOME: /home/ubuntu/.pm2
         NODE_ENV: development
         NAME: ${{ secrets.NAME }}  # Add 'name' from GitHub Secrets
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
