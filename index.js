@@ -2,11 +2,11 @@
 
 const express = require('express');
 const app = express();
-const port = 3000;
+
 require('dotenv').config();
 // Middleware to parse JSON request body
 app.use(express.json());
-
+const port = process.env.PORT || 3000;
 // Simple GET route
 app.get('/', (req, res) => {
   res.send(`Hello, this is a simple API! by ${process.env.name} , !!!!`)
