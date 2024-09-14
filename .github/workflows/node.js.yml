@@ -27,20 +27,15 @@ jobs:
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Ensure PM2 is installed
-      run: |
-        npm install -g pm2
+      run: npm install -g pm2
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Deploy and Start Application with PM2
       run: |
         pm2 start ecosystem.config.js --env development
-      env:
-        PM2_HOME: ~/.pm2
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
-
-    - name: Save PM2 process list for restart
-      run: |
         pm2 save
+        pm2 list
+        pm2 logs
       env:
         PM2_HOME: ~/.pm2
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
