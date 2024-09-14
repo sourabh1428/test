@@ -43,7 +43,7 @@ jobs:
       env:
         PM2_HOME: ~/.pm2
         NODE_ENV: development
-        NAME: ${{ secrets.name }}  # Add 'name' from GitHub Secrets
+        NAME: ${{ secrets.NAME }}  # Add 'name' from GitHub Secrets
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Display PM2 logs

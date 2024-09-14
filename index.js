@@ -9,7 +9,7 @@ app.use(express.json());
 const port = process.env.PORT || 3000;
 // Simple GET route
 app.get('/', (req, res) => {
-  res.send(`Hello, this is a simple API! by ${process.env.name} , !!!!`)
+  res.send(`Hello, this is a simple API! by ${process.env.NAME} , !!!!`)
 });
 
 app.get('/hue', (req, res) => {
