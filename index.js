@@ -9,7 +9,7 @@ app.use(express.json());
 
 // Simple GET route
 app.get('/', (req, res) => {
-  res.send(`Hello, this is a simple API! by ${process.env.name}`)
+  res.send(`Hello, this is a simple API! by ${process.env.name} , !!!!`)
 });
 
 app.get('/hue', (req, res) => {
