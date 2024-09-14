@@ -9,7 +9,7 @@ const resend = new Resend('re_jNN8QjVZ_BSmYPVsjLyDGAekYBKF5Z7Ad');
     from: 'Acme <sppathak12488@gmail.com>',
     to: ['sppathak1428@gmail.com'],
     subject: 'Hello World',
-    html: '<strong>It works!</strong>',
+    html: '<strong>It 2131works!</strong>',
   });
 
   if (error) {

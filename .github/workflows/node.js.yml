@@ -49,7 +49,10 @@ jobs:
           # Delete any existing 'index' process, ignore errors if it doesn't exist
           pm2 delete all || true
 
+          pm2 save -f
+          
           # Start or restart the Node.js application with PM2
+          
           pm2 start index.js --name index --watch --env development
 
           # Save the PM2 process list and force update
