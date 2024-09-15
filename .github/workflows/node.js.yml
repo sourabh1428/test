@@ -29,8 +29,8 @@ jobs:
     - name: List installed npm packages
       run: npm list --depth=0
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
-    - 
-      name: Ensure PM2 is installed
+
+    - name: Ensure PM2 is installed
       run: npm install -g pm2
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
@@ -50,13 +50,13 @@ jobs:
           # Check if the PM2_HOME directory exists
           ls -la /home/ubuntu/.pm2
 
-          # Delete any existing 'index' process, ignore errors if it doesn't exist
-          pm2 delete all || true
+          # Stop the process by name if it's running
+          pm2 stop index || true
 
-          pm2 save -f
+          # Delete any existing 'index' process, ignore errors if it doesn't exist
+          pm2 delete index || true
           
           # Start or restart the Node.js application with PM2
-          
           pm2 start index.js --name index --watch --env development
 
           # Save the PM2 process list and force update
@@ -67,11 +67,11 @@ jobs:
       env:
         PM2_HOME: /home/ubuntu/.pm2
         NODE_ENV: development
-        NAME: ${{ secrets.NAME }}  # Add 'name' from GitHub Secrets
-        REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}  # Add 'name' from GitHub Secrets
-        MONGODB_URI: ${{ secrets.MONGODB_URI }}  # Add 'name' from GitHub Secrets
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}  # Add 'name' from GitHub Secrets
-        PORT: ${{ secrets.PORT }}  # Add 'name' from GitHub Secrets
+        NAME: ${{ secrets.NAME }}  # GitHub Secrets
+        REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}  # GitHub Secrets
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}  # GitHub Secrets
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}  # GitHub Secrets
+        PORT: ${{ secrets.PORT }}  # GitHub Secrets
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Display PM2 logs
