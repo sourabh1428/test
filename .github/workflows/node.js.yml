@@ -68,6 +68,10 @@ jobs:
         PM2_HOME: /home/ubuntu/.pm2
         NODE_ENV: development
         NAME: ${{ secrets.NAME }}  # Add 'name' from GitHub Secrets
+        REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}  # Add 'name' from GitHub Secrets
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}  # Add 'name' from GitHub Secrets
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}  # Add 'name' from GitHub Secrets
+        PORT: ${{ secrets.PORT }}  # Add 'name' from GitHub Secrets
       working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
 
     - name: Display PM2 logs
