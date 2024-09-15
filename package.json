@@ -1,17 +1,30 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "backend": "file:",
+    "axios": "^1.7.2",
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "bottleneck": "^2.19.5",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.0",
-    "resend": "^4.0.0"
-  }
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "jsonwebtoken": "^9.0.2",
+    "learn1428": "^1.0.1",
+    "lodash.debounce": "^4.0.8",
+    "mongodb": "^6.7.0",
+    "mongoose": "^8.5.2",
+    "nodemon": "^3.1.4",
+    "redis": "^4.7.0",
+    "user-sdk-1428": "file:"
+  },
+  "name": "user-sdk-1428",
+  "version": "1.0.60",
+  "description": "this is for testing purposes",
+  "main": "./SDK/index.js",
+  "keywords": [
+    "user",
+    "test"
+  ],
+  "author": "sourabh1428",
+  "license": "MIT"
 }
