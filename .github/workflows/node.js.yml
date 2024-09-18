@@ -24,7 +24,7 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
-      working-directory: /home/ubuntu/actions-runner/_work/test/tes
+      working-directory: /home/ubuntu/actions-runner/_work/test/test
       
     - name: List installed npm packages
       run: npm list --depth=0
