@@ -24,23 +24,23 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+      working-directory: /home/ubuntu/actions-runner/_work/test
       
     - name: List installed npm packages
       run: npm list --depth=0
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+      working-directory: /home/ubuntu/actions-runner/_work/test
 
     - name: Ensure PM2 is installed
       run: npm install -g pm2
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+      working-directory: /home/ubuntu/actions-runner/_work/test
 
     - name: Print environment variables
       run: printenv
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+      working-directory: /home/ubuntu/actions-runner/_work/test
 
     - name: Check files in working directory
-      run: ls -la /home/ubuntu/actions-runner-backend/_work/test/test
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+      run: ls -la /home/ubuntu/actions-runner/_work/test/test
+      working-directory: /home/ubuntu/actions-runner/_work/test
 
     - name: Start or Restart Application with PM2
       run: |
@@ -72,9 +72,9 @@ jobs:
         MONGODB_URI: ${{ secrets.MONGODB_URI }}  # GitHub Secrets
         JWT_SECRET: ${{ secrets.JWT_SECRET }}  # GitHub Secrets
         PORT: ${{ secrets.PORT }}  # GitHub Secrets
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+      working-directory: /home/ubuntu/actions-runner/_work/test
 
     - name: Display PM2 logs
       run: |
         pm2 logs --lines 100
-      working-directory: /home/ubuntu/actions-runner-backend/_work/test/test
+      working-directory: /home/ubuntu/actions-runner/_work/test
