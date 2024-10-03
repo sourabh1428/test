@@ -10,7 +10,7 @@ const validateApiKey = require('./routes/DBauth.js');
 
 require('dotenv').config()
 
-const port = process.env.PORT ;
+const port = 8080 || process.env.PORT ;
 
 
 
