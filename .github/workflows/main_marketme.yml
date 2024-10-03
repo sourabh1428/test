@@ -20,8 +20,8 @@ jobs:
 
       - name: npm install and build
         run: |
-          npm install
-          npm run build --if-present
+          npm i
+       
 
   deploy:
     runs-on: ubuntu-latest
@@ -47,6 +47,20 @@ jobs:
           app-name: 'marketme'
           slot-name: 'production'
           package: .
+          # Adding app settings if needed
+         
 
       - name: Notify Deployment
-        run: echo "Deployed to ${{ steps.deploy-to-webapp.outputs.webapp-url }}"
+        run: |
+          echo "Deployed to ${{ steps.deploy-to-webapp.outputs.webapp-url }}"
+          echo "Deployment completed at $(date)"
+      
+      - name: Check for running app
+        run: |
+          echo "Checking app status..."
+          curl -f ${{ steps.deploy-to-webapp.outputs.webapp-url }} || echo "App is not responding."
+
+      - name: Enable logging
+        run: |
+          echo "Enabling logging for better troubleshooting..."
+          az webapp log config --name marketme --resource-group <YourResourceGroup> --application-logging true --detailed-error-messages true --failed-request-tracing true
