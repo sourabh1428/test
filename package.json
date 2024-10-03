@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@react-email/components": "^0.0.25",
+    "@react-email/render": "^1.0.1",
     "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
@@ -8,6 +10,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.3.1",
+    "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "learn1428": "^1.0.1",
     "lodash.debounce": "^4.0.8",
@@ -15,6 +18,7 @@
     "mongoose": "^8.5.2",
     "nodemon": "^3.1.4",
     "redis": "^4.7.0",
+    "resend": "^4.0.0",
     "user-sdk-1428": "file:"
   },
   "name": "user-sdk-1428",
