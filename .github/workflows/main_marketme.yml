@@ -1,4 +1,4 @@
-name: Build and deploy Node.js app to Azure Web App - marketme
+name: Build and deploy Node.js app to Azure VM - marketme
 
 on:
   push:
@@ -18,48 +18,42 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: npm install and build
+      - name: npm install
         run: |
-          npm i
-       
+          npm install
+
+      - name: Archive production artifacts
+        run: |
+          mkdir -p ./dist
+          cp -r ./* ./dist
+          cd ./dist
+          zip -r ../dist.zip .
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write # This is required for requesting the JWT
-
     steps:
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_48D1D965DFE4412E903BCE9C7FA93E7D }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_74FEED099BFE44B5ACF17262541A58AB }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_122EF020D13D4B439BB9081F653E9156 }}
+      - name: Install SSH Client
+        run: sudo apt-get install -y openssh-client
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'marketme'
-          slot-name: 'production'
-          package: .
-          # Adding app settings if needed
-         
+      - name: Copy files via SCP
+        run: |
+          echo "$PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          scp -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null dist.zip azureuser@40.78.122.33:/home/azureuser/
+
+      - name: SSH to VM and deploy
+        run: |
+          echo "$PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          ssh -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null azureuser@40.78.122.33 << 'EOF'
+            unzip -o /home/azureuser/dist.zip -d /home/azureuser/
+            cd /home/azureuser
+            npm install --production
+            pm2 start index.js --name marketme || pm2 restart marketme
+          EOF
 
       - name: Notify Deployment
         run: |
-          echo "Deployed to ${{ steps.deploy-to-webapp.outputs.webapp-url }}"
+          echo "Deployed to Azure VM"
           echo "Deployment completed at $(date)"
-      
-      - name: Check for running app
-        run: |
-          echo "Checking app status..."
-          curl -f ${{ steps.deploy-to-webapp.outputs.webapp-url }} || echo "App is not responding."
-          - name: Enable logging
-          run: |
-            echo "Enabling logging for better troubleshooting..."
-            az webapp log config --name marketme --resource-group marketme_group --application-logging filesystem --detailed-error-messages true --failed-request-tracing true
