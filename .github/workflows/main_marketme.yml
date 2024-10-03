@@ -20,8 +20,8 @@ jobs:
         run: |
           echo "${{ secrets.PRIVATE_KEY }}" > private_key
           chmod 600 private_key
-          # Copy your backend code to the VM
-          scp -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r . azureuser@40.78.122.33:/home/azureuser/
+          # Specify the files or directories to copy
+          scp -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* azureuser@40.78.122.33:/home/azureuser/
 
       - name: SSH to VM and run the application
         run: |
