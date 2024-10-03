@@ -25,9 +25,7 @@ jobs:
       - name: Archive production artifacts
         run: |
           mkdir -p ./dist
-          # Copy all files except the dist directory itself
-          shopt -s extglob  # Enable extended globbing
-          cp -r !("dist") ./dist
+          cp -r ./* ./dist
           cd ./dist
           zip -r ../dist.zip .
 
@@ -40,18 +38,23 @@ jobs:
 
       - name: Copy files via SCP
         run: |
-          echo "$PRIVATE_KEY" > private_key
+          echo "${{ secrets.PRIVATE_KEY }}" > private_key
           chmod 600 private_key
           scp -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null dist.zip azureuser@40.78.122.33:/home/azureuser/
 
       - name: SSH to VM and deploy
         run: |
-          echo "$PRIVATE_KEY" > private_key
+          echo "${{ secrets.PRIVATE_KEY }}" > private_key
           chmod 600 private_key
           ssh -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null azureuser@40.78.122.33 << 'EOF'
+            # Unzip the application files
             unzip -o /home/azureuser/dist.zip -d /home/azureuser/
             cd /home/azureuser
+            
+            # Install npm packages and start the application
             npm install --production
+            
+            # Restart the application using PM2
             pm2 start index.js --name marketme || pm2 restart marketme
           EOF
 
