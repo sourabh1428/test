@@ -63,4 +63,4 @@ jobs:
       - name: Enable logging
         run: |
           echo "Enabling logging for better troubleshooting..."
-          az webapp log config --name marketme --resource-group <YourResourceGroup> --application-logging true --detailed-error-messages true --failed-request-tracing true
+          az webapp log config --name marketme --resource-group marketme_group --application-logging true --detailed-error-messages true --failed-request-tracing true
