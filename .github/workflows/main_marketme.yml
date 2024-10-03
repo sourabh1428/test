@@ -59,8 +59,7 @@ jobs:
         run: |
           echo "Checking app status..."
           curl -f ${{ steps.deploy-to-webapp.outputs.webapp-url }} || echo "App is not responding."
-
-      - name: Enable logging
-        run: |
-          echo "Enabling logging for better troubleshooting..."
-          az webapp log config --name marketme --resource-group marketme_group --application-logging true --detailed-error-messages true --failed-request-tracing true
+          - name: Enable logging
+          run: |
+            echo "Enabling logging for better troubleshooting..."
+            az webapp log config --name marketme --resource-group marketme_group --application-logging filesystem --detailed-error-messages true --failed-request-tracing true
