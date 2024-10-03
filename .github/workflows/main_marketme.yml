@@ -25,7 +25,9 @@ jobs:
       - name: Archive production artifacts
         run: |
           mkdir -p ./dist
-          cp -r ./* ./dist
+          # Copy all files except the dist directory itself
+          shopt -s extglob  # Enable extended globbing
+          cp -r !("dist") ./dist
           cd ./dist
           zip -r ../dist.zip .
 
