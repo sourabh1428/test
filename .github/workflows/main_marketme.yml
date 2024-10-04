@@ -30,12 +30,34 @@ jobs:
           ssh -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null azureuser@40.78.122.33 << 'EOF'
             cd /home/azureuser
 
+           # Print environment variables for debugging
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}"
+          echo "NAME=${{ secrets.NAME }}"
+          echo "PORT=${{ secrets.PORT }}"
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+
+
             # Install npm packages if necessary
             npm install --production
 
             # Start the application using PM2 with ecosystem file
             pm2 start ecosystem.config.js --env production || pm2 restart marketme
           EOF
+
+
+           # Print environment variables for debugging
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}"
+          echo "NAME=${{ secrets.NAME }}"
+          echo "PORT=${{ secrets.PORT }}"
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+
+
+
+
+
+
 
       - name: Notify Deployment
         run: |
