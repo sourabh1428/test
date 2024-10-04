@@ -29,8 +29,17 @@ jobs:
           chmod 600 private_key
           ssh -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null azureuser@40.78.122.33 << 'EOF'
             cd /home/azureuser
+            
+            # Inject environment variables from GitHub secrets
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            export MONGODB_URI=${{ secrets.MONGODB_URI }}
+            export NAME=${{ secrets.NAME }}
+            export PORT=${{ secrets.PORT }}
+            export REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+
             # Install npm packages if necessary
             npm install --production
+
             # Start the application using PM2
             pm2 start index.js --name marketme || pm2 restart marketme
           EOF
