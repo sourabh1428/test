@@ -10,6 +10,18 @@ const validateApiKey = require('./routes/DBauth.js');
 
 require('dotenv').config()
 
+const { MongoClient } = require('mongodb');
+
+// Use process.env to access environment variables
+const mongoUri = process.env.MONGODB_URI;
+
+if (!mongoUri) {
+    console.error('MONGODB_URI is not defined');
+    process.exit(1); // Exit the application if the variable is not set
+}
+
+
+
 const port = 8080 || process.env.PORT ;
 
 
