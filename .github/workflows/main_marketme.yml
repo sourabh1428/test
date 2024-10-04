@@ -23,7 +23,15 @@ jobs:
           # Specify the files or directories to copy
           scp -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* azureuser@40.78.122.33:/home/azureuser/
           rm private_key  # Clean up the private key file
-
+      
+      - name: Debugging Environment Variables
+        run: |
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+            echo "MONGODB_URI=${{ secrets.MONGODB_URI }}"
+            echo "NAME=${{ secrets.NAME }}"
+            echo "PORT=${{ secrets.PORT }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+        
       - name: SSH to VM and run the application
         run: |
           echo "${{ secrets.PRIVATE_KEY }}" > private_key
