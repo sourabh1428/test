@@ -23,39 +23,40 @@ jobs:
           # Specify the files or directories to copy
           scp -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* azureuser@40.78.122.33:/home/azureuser/
           rm private_key  # Clean up the private key file
-      
+
       - name: Debugging Environment Variables
         run: |
-            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
-            echo "MONGODB_URI=${{ secrets.MONGODB_URI }}"
-            echo "NAME=${{ secrets.NAME }}"
-            echo "PORT=${{ secrets.PORT }}"
-            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
-        
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }} is set"
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }} is set"
+          echo "NAME=${{ secrets.NAME }} is set"
+          echo "PORT=${{ secrets.PORT }} is set"
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} is set"
+
       - name: SSH to VM and run the application
         run: |
           echo "${{ secrets.PRIVATE_KEY }}" > private_key
           chmod 600 private_key
-          ssh -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null azureuser@40.78.122.33 << 'EOF'
-            export JWT_SECRET="${JWT_SECRET}"
-            export MONGODB_URI="${MONGODB_URI}"
-            export NAME="${NAME}"
-            export PORT="${PORT}"
-            export REDIS_PASSWORD="${REDIS_PASSWORD}"
+          ssh -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null azureuser@40.78.122.33 << EOF
+            # Export environment variables for the session
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            export MONGODB_URI="${{ secrets.MONGODB_URI }}"
+            export NAME="${{ secrets.NAME }}"
+            export PORT="${{ secrets.PORT }}"
+            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
 
             cd /home/azureuser
 
-            # Print environment variables for debugging
-            echo "JWT_SECRET=$JWT_SECRET"
-            echo "MONGODB_URI=$MONGODB_URI"
-            echo "NAME=$NAME"
-            echo "PORT=$PORT"
-            echo "REDIS_PASSWORD=$REDIS_PASSWORD"
+            # Debugging: Print the variables to ensure they are set
+            echo "JWT_SECRET=\$JWT_SECRET"
+            echo "MONGODB_URI=\$MONGODB_URI"
+            echo "NAME=\$NAME"
+            echo "PORT=\$PORT"
+            echo "REDIS_PASSWORD=\$REDIS_PASSWORD"
 
             # Install npm packages if necessary
             npm install --production --omit=dev
 
-            # Start the application using PM2 with ecosystem file
+            # Start or restart the app using PM2
             pm2 start ecosystem.config.js --env production || pm2 restart marketme
           EOF
           rm private_key  # Clean up the private key file
