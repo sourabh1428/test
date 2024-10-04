@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../Modal.js');
 const { MongoClient, ObjectId } = require('mongodb');
 
-
+let uri =process.env.MONGODB_URI;
 
 
 
