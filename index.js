@@ -1,10 +1,15 @@
 // index.js
+require('dotenv').config()
 const express = require('express');
+
 const cors = require('cors'); // Import cors package
 const router = express.Router();
+
+
 const {authenticateJWT}= require('./middleware');
 const rateLimit = require('express-rate-limit');
 const app = express();
+app.use(express.json());
 const authRoute = require('./routes/Auth.js');
 const validateApiKey = require('./routes/DBauth.js');
 
@@ -21,6 +26,7 @@ if (!mongoUri) {
 }
 
 
+console.log(process.env.MONGODB_URI);
 
 const port = 8080 || process.env.PORT ;
 
@@ -46,7 +52,6 @@ const eventRoutes=require('./routes/events.js');
 
 const campaignRoutes = require('./routes/campaign.js');
 const { validate } = require('./Modal.js');
-const { configDotenv } = require('dotenv');
 
 
 // Use routes1
