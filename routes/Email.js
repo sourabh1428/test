@@ -2,107 +2,85 @@ const {Resend}=require('resend');
 const express = require('express');
 const router = express.Router();
 
-
-
-
-
-router.post('/email-status', (req, res) => {
-    const event = req.body;
-  
-    if (event.type === 'opened') {
-      const messageId = event.data.id;  // Use message_id to identify the email
-      const recipient = event.data.email; // Get the recipient's email
-    
-      // Now you can track which email was opened by matching the messageId
-      console.log(`Email with message_id ${messageId} was opened by ${recipient}`);
-    }
-    console.log(event.data);
-    res.sendStatus(200);
-    return;
-  });
-  
-
-
   const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
 
   // Function to send the email
-  async function sendBulkEmails() {
-    const recipients = [
-      'sppathak1428@gmail.com',
-      // 'khushnimabanchhor@gmail.com',
-      // Add more recipients here
-    ];
+ 
   
-    // HTML content with images and text for MarketMe
-    const htmlContent = `
-     <!doctype html>
-<html>
-  <body>
-    <div
-      style='background-color:#F5F5F5;color:#262626;font-family:"Helvetica Neue", "Arial Nova", "Nimbus Sans", Arial, sans-serif;font-size:16px;font-weight:400;letter-spacing:0.15008px;line-height:1.5;margin:0;padding:32px 0;min-height:100%;width:100%'
-    >
-      <table
-        align="center"
-        width="100%"
-        style="margin:0 auto;max-width:600px;background-color:#FFFFFF"
-        role="presentation"
-        cellspacing="0"
-        cellpadding="0"
-        border="0"
-      >
-        <tbody>
-          <tr style="width:100%">
-            <td>
-              <div style="padding:16px 24px 16px 24px"></div>
-              <h2
-                style="font-weight:bold;margin:0;font-size:24px;padding:16px 24px 16px 24px"
-              >
-                Hello Sourabh
-              </h2>
-              <div style="padding:16px 24px 16px 24px">
-                <img
-                  alt="Sample product"
-                  src="https://assets.usewaypoint.com/sample-image.jpg"
-                  style="outline:none;border:none;text-decoration:none;vertical-align:middle;display:inline-block;max-width:100%"
-                />
-              </div>
-              <div style="padding:16px 24px 16px 24px">
-                <img
-                  alt=""
-                  src="https://ui-avatars.com/api/?size=128"
-                  height="64"
-                  width="64"
-                  style="outline:none;border:none;text-decoration:none;object-fit:cover;height:64px;width:64px;max-width:100%;display:inline-block;vertical-align:middle;text-align:center;border-radius:64px"
-                />
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </body>
-</html>
-    `;
+
   
-    for (let recipient of recipients) {
-      const { data, error } = await resend.emails.send({
-        from: 'FOUNDER OFFICE <marketing@comms.marketme.site>',
-        to: [recipient],
-        subject: 'Welcome to MarketMe!',
-        html: htmlContent,
+  // POST /sendEmails endpoint
+  router.post("/sendEmails", async (req, res) => {
+      const {
+          campaignId,
+          emailSubject,
+          emailHtmlContent,
+          senderName,
+          recipients, // Assuming this is an array of metadata objects
+          fromAddress,
+          headers, // Pass the headers from the request
+      } = req.body;
+  
+      // Log the entire request body
+      console.log(req.body);
+  
+      try {
+          // Validate recipients
+          if (!Array.isArray(recipients) || recipients.length === 0) {
+              console.error("Recipients list is invalid or empty.");
+              return res.status(400).send("Invalid recipients list");
+          }
+  
+          // Send emails
+          await sendBulkEmails(fromAddress, campaignId, emailSubject, emailHtmlContent, senderName, recipients, headers); // Pass headers here
+          console.log("Sent emails to all users for campaign " + campaignId);
+          res.status(200).send("Emails sent successfully");
+      } catch (e) {
+          console.log(e);
+          res.status(500).send("Internal Server Error");
+      }
+  });
+  
+  // Function to send bulk emails
+  async function sendBulkEmails(fromAddress, campaignId, emailSubject, emailHtmlContent, senderName, recipients, headers) {
+      // Create an array of promises for sending emails
+      const emailPromises = recipients.map(async (recipient) => {
+          const recipientEmail = recipient.email; // Extract email from recipient metadata
+          const mmid = recipient.mmid; // Extract MMID from recipient metadata
+          const cid = recipient.cid; // Extract CID from recipient metadata
+  
+          if (!recipientEmail || !mmid || !cid) {
+              console.error(`Recipient metadata does not contain a valid email, MMID, or CID:`, recipient);
+              return; // Skip this recipient if email, MMID, or CID is invalid
+          }
+  
+          try {
+              const { data, error } = await resend.emails.send({
+                  from: `${senderName} <${fromAddress}>`, // Correctly formatted from address
+                  to: [recipientEmail], // Use the extracted email
+                  subject: emailSubject, // Use the provided subject
+                  html: emailHtmlContent, // Use the provided HTML content
+                  headers: {
+                      'MMID': mmid, // Attach custom MMID header
+                      'CID': cid, // Attach custom CID header
+                      ...headers, // Include any additional custom headers from the request body
+                  },
+              });
+  
+              // Log the response
+              if (error) {
+                  console.error(`Error sending email to ${recipientEmail}:`, error);
+              } else {
+                  console.log(`Email sent successfully to ${recipientEmail} with MMID ${mmid}:`, data);
+              }
+          } catch (err) {
+              console.error(`An unexpected error occurred while sending email to ${recipientEmail}:`, err);
+          }
       });
   
-      if (error) {
-        console.error(`Error sending email to ${recipient}:`, error);
-      } else {
-        console.log(`Email sent successfully to ${recipient}:`, data);
-      }
-    }
+      // Wait for all email promises to resolve
+      await Promise.all(emailPromises);
   }
   
-  sendBulkEmails();
+  module.exports = router;
   
-
-
-
-module.exports = router;

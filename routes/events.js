@@ -57,7 +57,7 @@ router.post('/addEvent', async function (req, res) {
         // Add new event to the existing events array
         existingEvents.push(eventEntry);
 
-        // Store the updated events array in Redis
+        // Store the updated events array in Redisw
         await redisClient.hSet(`userEvents`, id, JSON.stringify(existingEvents));
 
         console.log("Event cached in Redis", eventEntry);
