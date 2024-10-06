@@ -67,6 +67,14 @@ app.use('/email',validateApiKey, email);
 app.use('/keep-alive',(req,res)=>{
   res.json({"data":"Main server is Alive"});
 })
+app.post('/api/compile-mjml', (req, res) => {
+  const { mjml } = req.body;
+  const { html, errors } = mjml2html(mjml);
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+  res.json({ html });
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

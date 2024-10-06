@@ -55,6 +55,7 @@ router.post('/getParticularCampaign',async (req,res)=>{
         // Generate a new ObjectId for _id and segment_id
         const objId = new ObjectId();
         campaignData._id = objId;
+        const mode=campaignData.mode;
         campaignData.segment_id = objId.toString(); // Convert ObjectId to string for segment_id
 
         // Add creation timestamp in epoch format
