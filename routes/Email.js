@@ -4,7 +4,7 @@ const router = express.Router();
 
 const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
 
-  // Function to send the email
+//   Function to send the email
   const { MongoClient, ServerApiVersion , ObjectId } = require('mongodb');
   // MongoDB connection
   require('dotenv').config()
@@ -61,32 +61,36 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
   });
   
   // Function to send bulk emails
-  async function sendBulkEmails(fromAddress, campaignId, emailSubject, emailHtmlContent, senderName, recipients, headers) {
+  async function sendBulkEmails(fromAddress, cid, emailSubject, emailHtmlContent, senderName, recipients, headers,mmid) {
       // Create an array of promises for sending emails
     //fromAddress, campaignResponse.id, emailSubject, emailHtmlContent, senderName, recipients, headers
+
     
       const emailPromises = recipients.map(async (recipient) => {
-          const recipientEmail = recipient.email; // Extract email from recipient metadata
-          const mmid = recipient.mmid; // Extract MMID from recipient metadata
-          const cid = recipient.cid; // Extract CID from recipient metadata
-  
-          if (!recipientEmail || !mmid || !cid) {
+          const recipientEmail = recipient; // Extract email from recipient metadata // Extract MMID from recipient metadata
+          // Extract CID from recipient metadata
+            console.log(recipient);
+            
+          if (!recipientEmail  || !cid) {
               console.error(`Recipient metadata does not contain a valid email, MMID, or CID:`, recipient);
               return; // Skip this recipient if email, MMID, or CID is invalid
           }
   
           try {
               const { data, error } = await resend.emails.send({
-                  from: `${senderName} <${fromAddress}>`, // Correctly formatted from address
+                  from: `${senderName}" " <${fromAddress}>`, // Correctly formatted from address
                   to: [recipientEmail], // Use the extracted email
-                  subject: emailSubject, // Use the provided subject
-                  html: emailHtmlContent, // Use the provided HTML content
+                  subject: `${emailSubject}`, // Use the provided subject
+                  html: `${emailHtmlContent}`, // Use the provided HTML content
                   headers: {
-                      'MMID': mmid, // Attach custom MMID header
-                      'CID': cid, // Attach custom CID header
-                      ...headers, // Include any additional custom headers from the request body
+                      'MMID': `${mmid}`, // Attach custom MMID header
+                      'CID': `${cid}`, // Attach custom CID headerw
                   },
               });
+
+           
+
+
   
               // Log the response
               if (error) {
@@ -101,6 +105,8 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
   
       // Wait for all email promises to resolve
       await Promise.all(emailPromises);
+      ;
+      
   }
   
 
@@ -186,9 +192,10 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
     try {
         const campaignResponse = await postCampaign(req.body); // Ensure this function handles creation correctly
         console.log("Campaign created successfully:", campaignResponse);
-
-        await sendBulkEmails(fromAddress, campaignResponse.id, emailSubject, emailHtmlContent, senderName, recipients, headers);
-        console.log("Emails sent successfully for campaign " + campaignResponse.id);
+        console.log(campaignResponse);
+        
+        await sendBulkEmails(fromAddress, campaignResponse, emailSubject, emailHtmlContent, senderName, recipients, headers,1223);
+        console.log("Emails sent successfully for campaign " + campaignResponse);
 
         res.status(200).json({
             message: 'Campaign created and emails sent successfully.',
@@ -200,6 +207,34 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
     }
 });
 
+
+
+// async function test()
+// {
+//     const mmid=123;
+//    try{ const { data, error } = await resend.emails.send({
+//         from: `sppatha <comms@comms.marketme.site>`, // Correctly formatted from address
+//         to: ["sppathak1428@gmail.com"], // Use the extracted email
+//         subject: "emailSubject", // Use the provided subject
+//         html: "<h1>hello<h1>", // Use the provided HTML content
+//         headers: {
+//             'MMID': `${mmid}`, // Attach custom MMID header
+//             'CID': "123", // Attach custom CID header
+//         },
+//     });
+//     console.log(data);
+//     if(error){
+//         console.log(error);
+        
+//     }
+// }
+// catch(err){
+//     console.log(err);
+    
+// }
+// }
+
+// test();
 
   module.exports = router;
   
