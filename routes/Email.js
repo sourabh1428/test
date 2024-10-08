@@ -84,7 +84,7 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
                   html: `${emailHtmlContent}`, // Use the provided HTML content
                   headers: {
                       'MMID': `${mmid}`, // Attach custom MMID header
-                      'CID': `${cid}`, // Attach custom CID headerw
+                      'CID': `${cid}`, // Attach custom CID headerw1
                   },
               });
 
