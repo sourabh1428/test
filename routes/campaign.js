@@ -46,6 +46,8 @@ router.post('/getParticularCampaign',async (req,res)=>{
      console.log(error);
     }
  })
+
+ 
  
 
  router.post('/postCampaign', async (req, res) => {
@@ -55,7 +57,7 @@ router.post('/getParticularCampaign',async (req,res)=>{
         // Generate a new ObjectId for _id and segment_id
         const objId = new ObjectId();
         campaignData._id = objId;
-        const mode=campaignData.mode;
+
         campaignData.segment_id = objId.toString(); // Convert ObjectId to string for segment_id
 
         // Add creation timestamp in epoch format
@@ -77,7 +79,13 @@ router.post('/getParticularCampaign',async (req,res)=>{
         if (campaignType === "Event") {
             await client.db('test_db').collection("segments").insertOne({
                 segment_id: campaignData.segment_id,
-                event: campaignData.event,
+                event: campaignData.event, 
+                createdAt: campaignData.createdAt // Optional: Include creation time in the segment
+            });
+        }else{
+            await client.db('test_db').collection("segments").insertOne({
+                segment_id: campaignData.segment_id,
+                attribute: campaignData.attribute,
                 createdAt: campaignData.createdAt // Optional: Include creation time in the segment
             });
         }
@@ -88,11 +96,9 @@ router.post('/getParticularCampaign',async (req,res)=>{
         res.status(500).json({ "message": "Error adding campaign" });
     }
 });
-
 router.post('/UIS/:segment_id', async (req, res) => {
     try {
         const segment_id = req.params.segment_id;
-
 
         // Search for segment info
         const segment_info = await client.db('test_db').collection("campaigns").findOne({ segment_id: segment_id });
@@ -101,57 +107,59 @@ router.post('/UIS/:segment_id', async (req, res) => {
             return res.status(404).json({ message: "Segment not found" });
         }
 
-        // Fetch all user events
-        const audience = await client.db('test_db').collection("userEvent").find({}).toArray();
-        let ans = [];
+        let users = [];
 
-        // Iterate through each user's events
-        for (let i = 0; i < audience.length; i++) {
-            const events = audience[i].events;
-            
-            // Iterate through each event of the user
-            for (let j = 0; j < events.length; j++) {
-                const event = events[j];
-                
-                // Check if the event matches the segment_info's event
-                if (event.eventName === segment_info.event) {
-                    ans.push(audience[i].MMID);
-                    break; // Exit the loop for this user once a match is found
+        // Check if the segment is event-based or attribute-based
+        if (segment_info.event) {
+            // Fetch all user events
+            const audience = await client.db('test_db').collection("userEvent").find({}).toArray();
+
+            // Iterate through each user's events and match with segment's event
+            for (const user of audience) {
+                const events = user.events;
+
+                // Check if any event matches the segment event
+                if (events.some(event => event.eventName === segment_info.event)) {
+                    users.push(user.MMID);  // Add user to the users array if event matches
                 }
             }
+
+        } else {
+            // Segment is attribute-based
+            const typeOfAttribute = segment_info.attribute.type;
+            const valueOfAttribute = segment_info.attribute.value;
+
+            // Use MongoDB query to directly find users based on attribute type and value
+            users = await client.db('test_db').collection("Users")
+                .find({ [typeOfAttribute]: valueOfAttribute })
+                .map(user => user.MMID)  // Directly extract MMID
+                .toArray();
         }
 
+        // Update the segment with the list of matched users
+        try {
+            const updateResult = await client.db('test_db').collection("segments").updateOne(
+                { segment_id: segment_info.segment_id },  // Match the segment by ID
+                { $set: { users: users } }               // Set the users field with the matched users
+            );
 
-        // Update segment_info with ans array
-    
-       
-        try{
-           
-        // Update the document in the campaigns collection with the ans array
-        const updateResult = await client.db('test_db').collection("segments").updateOne(
-            {segment_id: segment_info.segment_id }, // Use _id assuming it's the primary key
-            { $set: { users: ans } }
-        );
-       
-        if(updateResult.acknowledged===true)res.send(ans);
-        else{
-            res.send("failed")
+            if (updateResult.acknowledged) {
+                res.send(users);  // Send back the list of users
+            } else {
+                res.status(500).json({ message: "Failed to update segment info with users." });
+            }
+
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({ message: "Error updating segment with users." });
         }
-    }catch(e){
-        console.log(e);
-        res.status(500).json({ message: "Failed to update segment info with ans array." });
-    }
-        // if (updateResult.modifiedCount === 1) {
-        //     res.json({ message: "Segment info updated successfully with ans array." });
-        // } else {
-        //     res.status(500).json({ message: "Failed to update segment info with ans array." });
-        // }
 
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({ message: "Error fetching UIS" });
     }
 });
+
 
 router.get('/getCampaignsForUser', async function(req, res) {
     //http://localhost:3000/campaigns//getCampaignsForUser?MMID=1223
