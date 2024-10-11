@@ -45,7 +45,7 @@ router.post('/addEvent', async function (req, res) {
         let userEventDone = req.body;
         const eventTime = Math.floor(Date.now() / 1000); // Add creation time in epoch format
         userEventDone.EventTime = eventTime; // Add event time to the userEventDone object
-        let id = userEventDone.MMID;
+        let id = userEventDone.mmid;
 
         const eventName = userEventDone.eventName; // Assuming eventName is part of the request body
         const eventEntry = { eventTime, eventName }; // Create an event entry object
@@ -76,7 +76,7 @@ router.get('/userEvents', async function (req, res) {
     try {
         const db = client.db('test_db');
         const userEvent = db.collection('userEvent');
-        const MMID = req.query.MMID; // Get the MMID from the query parameters
+        const MMID = req.query.mmid; // Get the MMID from the query parameters
        
         if (!MMID) {
             return res.status(400).send({ error: "MMID is required" });
@@ -85,7 +85,7 @@ router.get('/userEvents', async function (req, res) {
         const users = await userEvent.find({}).toArray();
 
         for(let i=0;i<users.length;i++){
-            if(users[i].MMID==`${MMID}`){
+            if(users[i].mmid==`${MMID}`){
                 console.log(users[i]);
                return  res.status(200).json(users[i].events);
             }
