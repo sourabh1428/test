@@ -39,7 +39,28 @@ router.get('/users', async (req, res) => {
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
+router.get('/getUser/:mmid', async (req, res) => {
+  try {
+      const { mmid } = req.params; // Get MMID from request parameters
 
+      // Access the database and collection
+      const db = client.db('test_db');
+      const collection = db.collection('Users');
+
+      // Find the user by MMID
+      const user = await collection.findOne({ mmid: mmid });
+
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      // Return the user information
+      res.status(200).json(user);
+  } catch (error) {
+      console.error("Error retrieving user:", error);
+      res.status(500).json({ error: "Failed to retrieve user" });
+  }
+});
 
 router.post('/postUser', async (req, res) => {
     try {
