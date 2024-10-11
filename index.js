@@ -49,7 +49,7 @@ router.use(apiLimiter);
 const routes = require('./routes/users.js');
 const email = require('./routes/Email.js');
 const eventRoutes=require('./routes/events.js');
-
+const users=require('./routes/users.js');
 const campaignRoutes = require('./routes/campaign.js');
 const { validate } = require('./Modal.js');
 
@@ -63,6 +63,7 @@ app.use('/events',validateApiKey, eventRoutes);
 app.use('/campaigns',validateApiKey ,campaignRoutes);
 app.use('/auth',validateApiKey,authRoute );
 app.use('/email',validateApiKey, email);
+app.use('/users',validateApiKey, users);
 
 app.use('/keep-alive',(req,res)=>{
   res.json({"data":"Main server is Alive"});
