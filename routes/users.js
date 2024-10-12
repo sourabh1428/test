@@ -87,15 +87,15 @@ router.post('/postUser', async (req, res) => {
 
 
 router.post('/setUserAttribute',async function(req, res) {
-  const { MMID, attributeName, attributeValue }=req.params;
+  const { mmid, attributeName, attributeValue }=req.params;
 
   try{
 
     const db = client.db('test_db');
     const collection = db.collection('Users');
-    collection.findOne({MMID:MMID});
+    collection.findOne({mmid:mmid});
     await collection.updateOne(
-      { MMID: MMID },
+      { mmid: mmid },
       { $set: { [attributeName]: attributeValue } }
     );
 
