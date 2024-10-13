@@ -21,7 +21,7 @@ async function connectToMongoDB() {
 
 connectToMongoDB();
 
-// Example route to fetch users
+// Example route to fetch usersdasd
 router.get('/users', async (req, res) => {
   try {
     const db = client.db('test_db');
