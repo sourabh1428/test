@@ -54,9 +54,7 @@ const campaignRoutes = require('./routes/campaign.js');
 const { validate } = require('./Modal.js');
 
 
-// Use routes1
-
-
+// Use routessdas
 app.use('/auth', validateApiKey,authRoute);
 app.use('/',validateApiKey,routes);
 app.use('/events',validateApiKey, eventRoutes);
