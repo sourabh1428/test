@@ -1,4 +1,4 @@
-const { Resend } = require('resend');  // Use re2quire instead of import
+const { Resend } = require('resend');  // Use re2quire instead ofdsa import
 
 
 
