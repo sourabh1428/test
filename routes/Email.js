@@ -213,8 +213,8 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
 // {
 //     const mmid=123;
 //    try{ const { data, error } = await resend.emails.send({
-//         from: `sppatha <comms@comms.marketme.site>`, // Correctly formatted from address
-//         to: ["sppathak1428@gmail.com"], // Use the extracted email
+//         from: `hue <comms@comms.marketme.site>`, // Correctly formatted from address
+//         to: ["rahul.dsu@gmail.com"], // Use the extracted email
 //         subject: "emailSubject", // Use the provided subject
 //         html: "<h1>hello<h1>", // Use the provided HTML content
 //         headers: {
