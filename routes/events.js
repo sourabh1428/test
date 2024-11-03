@@ -4,7 +4,7 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const { createClient } = require('redis'); // Import from redis package
 require('dotenv').config();
 
-// Redis connection
+// Redis connectioneq
 const redisClient = createClient({
     password: process.env.redis_password,
     socket: {
