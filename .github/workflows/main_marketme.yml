@@ -21,7 +21,7 @@ jobs:
           echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
           chmod 600 aws_private_key
           # Update the IP and username for the AWS instance
-          scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* ec2-user@YOUR_AWS_IP:/home/ec2-user/
+          scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* ec2-user@"${{ secrets.AWS_IP }}":/home/ec2-user/
           rm aws_private_key  # Clean up the private key file
 
       - name: Debugging Environment Variables

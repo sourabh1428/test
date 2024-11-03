@@ -219,7 +219,7 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
 //         html: "<h1>hello<h1>", // Use the provided HTML content
 //         headers: {
 //             'MMID': `${mmid}`, // Attach custom MMID header
-//             'CID': "123", // Attach custom CID header
+//             'CID': "123", // Attach custom CID headerdsa
 //         },
 //     });
 //     console.log(data);
