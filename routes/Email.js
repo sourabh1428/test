@@ -218,7 +218,7 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
 //         subject: "emailSubject", // Use the provided subject
 //         html: "<h1>hello<h1>", // Use the provided HTML content
 //         headers: {
-//             'MMID': `${mmid}`, // Attach custom MMID header
+//             'MMID': `${mmid}`, // Attach custom MMID headerdas
 //             'CID': "123", // Attach custom CID headerdsa
 //         },
 //     });
