@@ -27,16 +27,16 @@ jobs:
 
     - name: Copy files to EC2 via SCP
       run: |
-        scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* ec2-user@${{secrets.AWS_IP}}:/home/ec2-user/app
+        scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* sourabh1428@${{secrets.AWS_IP}}:/home/sourabh1428/app
         rm aws_private_key  # Clean up the private key file
 
     - name: SSH to EC2 and run the application
       run: |
         echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
         chmod 600 aws_private_key
-        ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@${{secrets.AWS_IP}} << EOF
+        ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null sourabh1428@${{secrets.AWS_IP}} << EOF
           # Navigate to the app directory
-          cd /home/ec2-user/app
+          cd /home/sourabh1428/app
 
           # Set up environment variables
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
