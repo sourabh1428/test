@@ -28,7 +28,7 @@ jobs:
       run: |
         echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
         chmod 600 aws_private_key
-        ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@YOUR_AWS_IP << EOF
+        ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@${{secrets.AWS_IP}} << EOF
           # Navigate to the app directory
           cd /home/ec2-user/app
 
@@ -36,7 +36,7 @@ jobs:
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           export MONGODB_URI="${{ secrets.MONGODB_URI }}"
           export NAME="${{ secrets.NAME }}"
-          export PORT=YOUR_PORT
+          export PORT="${{secrets.PORT}}"
           export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
 
           # Install dependencies and start the app
