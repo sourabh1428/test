@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const { createClient } = require('redis'); // Import from redis package
+const { createClient } = require('redis'); // Import from redis padckage
 require('dotenv').config();
 
 // Redis connectioneq
