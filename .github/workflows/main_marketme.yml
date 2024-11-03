@@ -27,14 +27,14 @@ jobs:
 
     - name: Copy files to EC2 via SCP
       run: |
-        scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* ubuntu@${{secrets.AWS_IP}}:/home/ubuntu/app
+        scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* sourabh1428@${{secrets.AWS_IP}}:/home/ubuntu/app
         rm aws_private_key  # Clean up the private key file
 
     - name: SSH to EC2 and run the application
       run: |
         echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
         chmod 600 aws_private_key
-        ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{secrets.AWS_IP}} << EOF
+        ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null sourabh1428@${{secrets.AWS_IP}} << EOF
           # Navigate to the app directory
           cd /home/ubuntu/app
 
