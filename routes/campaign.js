@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const { MongoClient, ServerApiVersion , ObjectId } = require('mongodb');
-// MongoDB connection
+// MongoDB connections
 require('dotenv').config()
 
 

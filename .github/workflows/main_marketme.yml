@@ -20,7 +20,7 @@ jobs:
     - name: Set up AWS private key
       run: |
         echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
-        chmod 600 aws_private_key
+        sudo chmod 600 aws_private_key
 
     - name: Debug Check Key
       run: cat aws_private_key  # Verify the private key is set correctly
