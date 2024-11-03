@@ -1,4 +1,4 @@
-name: Deploy Node.js app to Azure VM - MarketMe
+name: Deploy Node.js app to AWS EC2 - MarketMe
 
 on:
   push:
@@ -18,11 +18,11 @@ jobs:
 
       - name: Copy files via SCP
         run: |
-          echo "${{ secrets.PRIVATE_KEY }}" > private_key
-          chmod 600 private_key
-          # Specify the files or directories to copy
-          scp -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* azureuser@40.78.122.33:/home/azureuser/
-          rm private_key  # Clean up the private key file
+          echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
+          chmod 600 aws_private_key
+          # Update the IP and username for the AWS instance
+          scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* ec2-user@YOUR_AWS_IP:/home/ec2-user/
+          rm aws_private_key  # Clean up the private key file
 
       - name: Debugging Environment Variables
         run: |
@@ -32,11 +32,11 @@ jobs:
           echo "PORT=${{ secrets.PORT }} is set"
           echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} is set"
 
-      - name: SSH to VM and run the application
+      - name: SSH to AWS EC2 and run the application
         run: |
-          echo "${{ secrets.PRIVATE_KEY }}" > private_key
-          chmod 600 private_key
-          ssh -i private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null azureuser@40.78.122.33 << EOF
+          echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
+          chmod 600 aws_private_key
+          ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@"${{ secrets.AWS_IP }}"" << EOF
             # Export environment variables for the session
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
             export MONGODB_URI="${{ secrets.MONGODB_URI }}"
@@ -44,7 +44,7 @@ jobs:
             export PORT="${{ secrets.PORT }}"
             export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
 
-            cd /home/azureuser
+            cd /home/ec2-user
 
             # Debugging: Print the variables to ensure they are set
             echo "JWT_SECRET=\$JWT_SECRET"
@@ -59,9 +59,9 @@ jobs:
             # Start or restart the app using PM2
             pm2 start ecosystem.config.js --env production || pm2 restart marketme
           EOF
-          rm private_key  # Clean up the private key file
+          rm aws_private_key  # Clean up the private key file
 
       - name: Notify Deployment
         run: |
-          echo "Deployed to Azure VM"
+          echo "Deployed to AWS EC2 instance"
           echo "Deployment completed at $(date)"
