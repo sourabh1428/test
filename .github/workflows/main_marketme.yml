@@ -15,7 +15,12 @@ jobs:
 
       - name: Install SSH Client
         run: sudo apt-get install -y openssh-client
-
+      
+      - name: Prepare SSH Key
+        run: |
+          echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
+          chmod 600 aws_private_key
+      
       - name: Copy files via SCP
         run: |
           echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
