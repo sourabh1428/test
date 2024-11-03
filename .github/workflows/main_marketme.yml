@@ -17,18 +17,24 @@ jobs:
     - name: Install SSH Client
       run: sudo apt-get install -y openssh-client
 
-    - name: Copy files to EC2 via SCP
+    - name: Set up AWS private key
       run: |
         echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
         chmod 600 aws_private_key
-        scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* ec2-user@${{secrets.AWS_IP}}:/home/ec2-user/app
+
+    - name: Debug Check Key
+      run: cat aws_private_key  # Verify the private key is set correctly
+
+    - name: Copy files to EC2 via SCP
+      run: |
+        scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* ec2-user@YOUR_AWS_IP:/home/ec2-user/app
         rm aws_private_key  # Clean up the private key file
 
     - name: SSH to EC2 and run the application
       run: |
         echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
         chmod 600 aws_private_key
-        ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@${{secrets.AWS_IP}} << EOF
+        ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@YOUR_AWS_IP << EOF
           # Navigate to the app directory
           cd /home/ec2-user/app
 
@@ -36,7 +42,7 @@ jobs:
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           export MONGODB_URI="${{ secrets.MONGODB_URI }}"
           export NAME="${{ secrets.NAME }}"
-          export PORT="${{secrets.PORT}}"
+          export PORT=YOUR_PORT
           export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
 
           # Install dependencies and start the app

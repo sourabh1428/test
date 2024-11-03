@@ -211,7 +211,7 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
 
 // async function test()
 // {
-//     const mmid=123;
+//     const mmid=123;s
 //    try{ const { data, error } = await resend.emails.send({
 //         from: `hue <comms@comms.marketme.site>`, // Correctly formatted from address
 //         to: ["rahul.dsu@gmail.com"], // Use the extracted email
