@@ -1,4 +1,4 @@
-name: Deploy Node.js app to AWS EC2 - MarketMe
+name: Deploy Node.js App to AWS EC2
 
 on:
   push:
@@ -11,62 +11,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4  # Check out the code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Install SSH Client
-        run: sudo apt-get install -y openssh-client
-      
-      - name: Prepare SSH Key
-        run: |
-          echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
-          chmod 600 aws_private_key
-      
-      - name: Copy files via SCP
-        run: |
-          echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
-          chmod 600 aws_private_key
-          # Update the IP and username for the AWS instance
-          scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* ec2-user@"${{ secrets.AWS_IP }}":/home/ec2-user/
-          rm aws_private_key  # Clean up the private key file
+    - name: Install SSH Client
+      run: sudo apt-get install -y openssh-client
 
-      - name: Debugging Environment Variables
-        run: |
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }} is set"
-          echo "MONGODB_URI=${{ secrets.MONGODB_URI }} is set"
-          echo "NAME=${{ secrets.NAME }} is set"
-          echo "PORT=${{ secrets.PORT }} is set"
-          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} is set"
+    - name: Copy files to EC2 via SCP
+      run: |
+        echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
+        chmod 600 aws_private_key
+        scp -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* ec2-user@YOUR_AWS_IP:/home/ec2-user/app
+        rm aws_private_key  # Clean up the private key file
 
-      - name: SSH to AWS EC2 and run the application
-        run: |
-          echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
-          chmod 600 aws_private_key
-          ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@"${{ secrets.AWS_IP }}"" << EOF
-            # Export environment variables for the session
-            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
-            export MONGODB_URI="${{ secrets.MONGODB_URI }}"
-            export NAME="${{ secrets.NAME }}"
-            export PORT="${{ secrets.PORT }}"
-            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
+    - name: SSH to EC2 and run the application
+      run: |
+        echo "${{ secrets.AWS_PRIVATE_KEY }}" > aws_private_key
+        chmod 600 aws_private_key
+        ssh -i aws_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@YOUR_AWS_IP << EOF
+          # Navigate to the app directory
+          cd /home/ec2-user/app
 
-            cd /home/ec2-user
+          # Set up environment variables
+          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          export MONGODB_URI="${{ secrets.MONGODB_URI }}"
+          export NAME="${{ secrets.NAME }}"
+          export PORT=YOUR_PORT
+          export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
 
-            # Debugging: Print the variables to ensure they are set
-            echo "JWT_SECRET=\$JWT_SECRET"
-            echo "MONGODB_URI=\$MONGODB_URI"
-            echo "NAME=\$NAME"
-            echo "PORT=\$PORT"
-            echo "REDIS_PASSWORD=\$REDIS_PASSWORD"
+          # Install dependencies and start the app
+          npm install --production
+          pm2 start index.js --name myapp --env production || pm2 restart myapp
+        EOF
+        rm aws_private_key  # Clean up the private key file
 
-            # Install npm packages if necessary
-            npm install --production --omit=dev
-
-            # Start or restart the app using PM2
-            pm2 start ecosystem.config.js --env production || pm2 restart marketme
-          EOF
-          rm aws_private_key  # Clean up the private key file
-
-      - name: Notify Deployment
-        run: |
-          echo "Deployed to AWS EC2 instance"
-          echo "Deployment completed at $(date)"
+    - name: Notify Deployment
+      run: |
+        echo "Deployed to AWS EC2"
+        echo "Deployment completed at $(date)"
