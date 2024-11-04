@@ -1,7 +1,6 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code, and run tests across different versions of Node.js.
 
-name: Node.js CI
+name: Node.js CI and Deploy
 
 on:
   push:
@@ -10,8 +9,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     strategy:
@@ -20,10 +18,44 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
+      # Step 1: Check out the repository code
+      - uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js with caching for npm packages
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 4: Set environment variables for the build
+      - name: Set Environment Variables
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          NAME: ${{ secrets.NAME }}
+          PORT: ${{ secrets.PORT }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        run: |
+          echo "Environment variables set for the job"
+
+      # Step 5: Install PM2 globally
+      - name: Install PM2
+        run: sudo npm install -g pm2
+
+      # Step 6: Start the application using PM2
+      - name: Start application with PM2
+        run: pm2 start index.js --name "my-app"
+        
+      # Step 7: Save PM2 process list to make it restart on server reboot
+      - name: Save PM2 process list
+        run: pm2 save
+
+      # Optional: Check PM2 status
+      - name: PM2 Status
+        run: pm2 status
