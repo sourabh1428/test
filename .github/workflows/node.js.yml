@@ -24,7 +24,6 @@ jobs:
         cache: 'npm'
     
     - run: npm ci
-   
 
     # Deploy to AWS EC2
     - name: Deploy to AWS EC2
@@ -35,5 +34,7 @@ jobs:
       run: |
         echo "$SSH_PRIVATE_KEY" > key.pem
         chmod 600 key.pem
+        ssh-keyscan -H $AWS_HOST >> ~/.ssh/known_hosts
         scp -i key.pem -r ./* $USER@$AWS_HOST:/home/ubuntu/app
         ssh -i key.pem $USER@$AWS_HOST 'cd /home/ubuntu/app && npm install && pm2 start server.js'
+      shell: /usr/bin/bash -e {0}

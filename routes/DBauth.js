@@ -4,7 +4,7 @@ require('dotenv').config()
 // Replace with your MongoDB connection URI
 
 const uri = process.env.MONGODB_URI;
-// Connect to MongoDBsss
+// Connect to MongoDBsssw
 
 const client = new MongoClient(uri);
 client.connect();
