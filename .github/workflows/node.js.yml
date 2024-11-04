@@ -50,8 +50,8 @@ jobs:
       # Step 6: Deploy code to AWS EC2 instance
       - name: Deploy to AWS EC2
         env:
-          AWS_HOST: ${{ secrets.AWS_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          AWS_HOST: ${{ secrets.AWS_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
           USER: ubuntu
         run: |
           echo "$SSH_PRIVATE_KEY" > key.pem
@@ -63,8 +63,8 @@ jobs:
       # Step 7: SSH into EC2 and run the app with PM2
       - name: Start application with PM2 on EC2
         env:
-          AWS_HOST: ${{ secrets.AWS_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          AWS_HOST: ${{ secrets.AWS_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
           USER: ubuntu
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no $USER@$AWS_HOST << EOF
@@ -77,8 +77,8 @@ jobs:
       # Step 8: Optional - Check PM2 status on EC2
       - name: PM2 Status on EC2
         env:
-          AWS_HOST: ${{ secrets.AWS_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          AWS_HOST: ${{ secrets.AWS_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
           USER: ubuntu
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no $USER@$AWS_HOST "pm2 status"
