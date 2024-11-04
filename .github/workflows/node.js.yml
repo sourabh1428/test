@@ -1,4 +1,4 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code, and run tests across different versions of Node.js.
+# This workflow will install dependencies, deploy to EC2, and run the app with PM2.
 
 name: Node.js CI and Deploy
 
@@ -15,7 +15,6 @@ jobs:
     strategy:
       matrix:
         node-version: [20.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
       # Step 1: Check out the repository code
@@ -48,14 +47,38 @@ jobs:
       - name: Install PM2
         run: sudo npm install -g pm2
 
-      # Step 6: Start the application using PM2
-      - name: Start application with PM2
-        run: pm2 start index.js --name "my-app"
-        
-      # Step 7: Save PM2 process list to make it restart on server reboot
-      - name: Save PM2 process list
-        run: pm2 save
+      # Step 6: Deploy code to AWS EC2 instance
+      - name: Deploy to AWS EC2
+        env:
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          USER: ubuntu
+        run: |
+          echo "$SSH_PRIVATE_KEY" > key.pem
+          chmod 600 key.pem
+          mkdir -p ~/.ssh
+          ssh-keyscan -H $AWS_HOST >> ~/.ssh/known_hosts
+          scp -i key.pem -o StrictHostKeyChecking=no -r ./* $USER@$AWS_HOST:/home/ubuntu/app
 
-      # Optional: Check PM2 status
-      - name: PM2 Status
-        run: pm2 status
+      # Step 7: SSH into EC2 and run the app with PM2
+      - name: Start application with PM2 on EC2
+        env:
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          USER: ubuntu
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$AWS_HOST << EOF
+            cd /home/ubuntu/app
+            npm install
+            pm2 start index.js --name "my-app"
+            pm2 save
+          EOF
+
+      # Step 8: Optional - Check PM2 status on EC2
+      - name: PM2 Status on EC2
+        env:
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          USER: ubuntu
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$AWS_HOST "pm2 status"
