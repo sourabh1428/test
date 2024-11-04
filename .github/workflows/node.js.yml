@@ -37,7 +37,8 @@ jobs:
         mkdir -p ~/.ssh
         ssh-keyscan -H $AWS_HOST >> ~/.ssh/known_hosts
         scp -i key.pem -o StrictHostKeyChecking=no -r ./* $USER@$AWS_HOST:/home/ubuntu/app
-        ssh -i key.pem -o StrictHostKeyChecking=no -v $USER@$AWS_HOST 'cd /home/ubuntu/app && npm install && pm2 start server.js'
+        ssh -i key.pem -o StrictHostKeyChecking=no $USER@$AWS_HOST 'cd /home/ubuntu/app && npm install && pm2 start server.js'
       shell: /usr/bin/bash -e {0}
+    
   
 
