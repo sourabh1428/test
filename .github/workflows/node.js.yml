@@ -25,7 +25,7 @@ jobs:
     
     - run: npm ci
 
-    # Deploy to AWS EC2s
+    # Deploy to AWS EC2ss
     - name: Deploy to AWS EC2
       env:
         AWS_HOST: ${{ secrets.AWS_IP }}
