@@ -100,7 +100,7 @@ router.post('/signin', async (req, res) => {
   }
 });
 
-// Clean up on application exitSs
+// Clean up on application exitSss
 process.on('SIGINT', async () => {
   await client.close();
   console.log('Database connection closed');
