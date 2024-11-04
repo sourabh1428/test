@@ -64,7 +64,12 @@ jobs:
 
           # Step 6.2: Test SSH connection before proceeding
           echo "Testing SSH connection to the server..."
-          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$AWS_HOST "echo 'SSH connection successful'" || exit 1
+          if ssh -i key.pem -o StrictHostKeyChecking=no $USER@$AWS_HOST "echo 'SSH connection successful'"; then
+            echo "SSH connection successful"
+          else
+            echo "SSH connection failed"
+            exit 1
+          fi
 
           # Step 6.3: Transfer files using SCP
           echo "Transferring files to AWS EC2 instance..."
