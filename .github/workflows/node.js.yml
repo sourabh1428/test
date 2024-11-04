@@ -34,8 +34,9 @@ jobs:
       run: |
         echo "$SSH_PRIVATE_KEY" > key.pem
         chmod 600 key.pem
-        mkdir -p ~/.ssh  # Create the .ssh directory if it doesn't exist
+        mkdir -p ~/.ssh
         ssh-keyscan -H $AWS_HOST >> ~/.ssh/known_hosts
-        scp -i key.pem -r ./* $USER@$AWS_HOST:/home/ubuntu/app
-        ssh -i key.pem $USER@$AWS_HOST 'cd /home/ubuntu/app && npm install && pm2 start server.js'
+        scp -i key.pem -o StrictHostKeyChecking=no -r ./* $USER@$AWS_HOST:/home/ubuntu/app
+        ssh -i key.pem -o StrictHostKeyChecking=no $USER@$AWS_HOST 'cd /home/ubuntu/app && npm install && pm2 start server.js'
       shell: /usr/bin/bash -e {0}
+
