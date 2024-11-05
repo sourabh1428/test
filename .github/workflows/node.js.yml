@@ -89,7 +89,7 @@ jobs:
             pm2 save
           EOF
 
-      # Step 8: Optional - Check PM2 status on EC2
+      # Step 8: Optional - Check PM2 status on EC22
       - name: PM2 Status on EC2
         env:
           AWS_HOST: ${{ secrets.AWS_IP }}
