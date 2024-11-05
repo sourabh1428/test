@@ -5,8 +5,6 @@ name: Node.js CI and Deploy
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -40,6 +38,13 @@ jobs:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
         run: |
+          touch .env
+          echo "JWT_SECRET=$JWT_SECRET" >>.env
+          echo "MONGODB_URI=$MONGODB_URI" >>.env
+          echo "NAME=$NAME" >>.env
+          echo "PORT=$PORT" >>.env
+          echo "PRIVATE_KEY=$PRIVATE_KEY" >>.env
+          echo "REDIS_PASSWORD=$REDIS_PASSWORD" >>.env
           echo "Environment variables set for the job"
 
       # Step 5: Install PM2 globally
