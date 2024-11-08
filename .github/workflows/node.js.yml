@@ -50,5 +50,7 @@ jobs:
       # Step 5: Install PM2 globally
       - name: Install PM2
         run: sudo npm install -g pm2
-
+      
+      - name: Restart server
+        run: pm2 restart index
     

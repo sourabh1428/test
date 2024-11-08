@@ -52,7 +52,7 @@ const eventRoutes=require('./routes/events.js');
 const users=require('./routes/users.js');
 const campaignRoutes = require('./routes/campaign.js');
 const { validate } = require('./Modal.js');
-
+const whatsapp = require('./routes/Whatsapp.js');
 
 // Use routessdas
 app.use('/auth', validateApiKey,authRoute);
@@ -62,6 +62,7 @@ app.use('/campaigns',validateApiKey ,campaignRoutes);
 app.use('/auth',validateApiKey,authRoute );
 app.use('/email',validateApiKey, email);
 app.use('/users',validateApiKey, users);
+app.use('/whatsapp',validateApiKey, whatsapp);
 
 app.use('/keep-alive',(req,res)=>{
   res.json({"data":"Main server is Alive"});

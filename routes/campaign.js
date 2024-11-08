@@ -52,6 +52,9 @@ router.post('/getParticularCampaign',async (req,res)=>{
 
  router.post('/postCampaign', async (req, res) => {
     try {
+        //  channel , type ,  event || attribute , value ,  channel
+
+
         const campaignData = req.body;
 
         // Generate a new ObjectId for _id and segment_id
@@ -59,7 +62,7 @@ router.post('/getParticularCampaign',async (req,res)=>{
         campaignData._id = objId;
 
         campaignData.segment_id = objId.toString(); // Convert ObjectId to string for segment_id
-
+       
         // Add creation timestamp in epoch format
         campaignData.createdAt = Date.now(); // Epoch time in milliseconds
 
@@ -80,12 +83,16 @@ router.post('/getParticularCampaign',async (req,res)=>{
             await client.db('test_db').collection("segments").insertOne({
                 segment_id: campaignData.segment_id,
                 event: campaignData.event, 
+                value:    campaignData.value,
+                channel: campaignData.channel,
                 createdAt: campaignData.createdAt // Optional: Include creation time in the segment
             });
         }else{
             await client.db('test_db').collection("segments").insertOne({
                 segment_id: campaignData.segment_id,
                 attribute: campaignData.attribute,
+                value: campaignData.value,
+                channel: campaignData.channel,
                 createdAt: campaignData.createdAt // Optional: Include creation time in the segment
             });
         }
@@ -119,15 +126,15 @@ router.post('/UIS/:segment_id', async (req, res) => {
                 const events = user.events;
 
                 // Check if any event matches the segment event
-                if (events.some(event => event.eventName === segment_info.event)) {
+                if (events.some(event => event.eventName === segment_info.value)) {
                     users.push(user.MMID);  // Add user to the users array if event matches
                 }
             }
 
         } else {
             // Segment is attribute-based
-            const typeOfAttribute = segment_info.attribute.type;
-            const valueOfAttribute = segment_info.attribute.value;
+            const typeOfAttribute = segment_info.attribute;
+            const valueOfAttribute = segment_info.value;
 
             // Use MongoDB query to directly find users based on attribute type and value
             users = await client.db('test_db').collection("Users")
