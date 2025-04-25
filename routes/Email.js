@@ -1,201 +1,193 @@
-const {Resend}=require('resend');
+const { Resend } = require('resend');
 const express = require('express');
 const router = express.Router();
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+require('dotenv').config();
 
 const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
 
-//   Function to send the email
-  const { MongoClient, ServerApiVersion , ObjectId } = require('mongodb');
-  // MongoDB connection
-  require('dotenv').config()
-  
-  
-  const uri = process.env.MONGODB_URI;
-  const client = new MongoClient(uri);
-  
-  // Ensure the MongoDB client connects before starting the server
-  async function connectToMongoDB() {
+const uri = process.env.MONGODB_URI;
+const client = new MongoClient(uri);
+
+// Async helper function to send a single email
+async function sendSingleEmail(params) {
     try {
-      await client.connect();
-      console.log("Successfully connected to MongoDB!");
-    } catch (error) {
-      console.error("Error connecting to MongoDB:", error);
-    }
-  }
-  
-  connectToMongoDB();
-  
-  
+        const { email, fromAddress, senderName, emailSubject, emailHtmlContent, cid, headers ,toAddress} = params;
+   
+        
+        const { data, error } = await resend.emails.send({
+            from: `${senderName} <${fromAddress}>`,
+            to: [email],
+            subject: emailSubject,
+            html: emailHtmlContent,
+            headers: {
+                'CID': cid,
+                ...headers
+            },
+            replyTo:"sppathak1428@gmail.com"
+        });
 
-  
-  // POST /sendEmails endpoint
-  router.post("/sendEmails", async (req, res) => {
-      const {
-          campaignId,
-          emailSubject,
-          emailHtmlContent,
-          senderName,
-          recipients, // Assuming this is an array of metadata objects
-          fromAddress,
-          headers, // Pass the headers from the request
-      } = req.body;
-  
-      // Log the entire request body
-      console.log(req.body);
-  
-      try {
-          // Validate recipients
-          if (!Array.isArray(recipients) || recipients.length === 0) {
-              console.error("Recipients list is invalid or empty.");
-              return res.status(400).send("Invalid recipients list");
-          }
-  
-          // Send emails
-          await sendBulkEmails(fromAddress, campaignId, emailSubject, emailHtmlContent, senderName, recipients, headers); // Pass headers here
-          console.log("Sent emails to all users for campaign " + campaignId);
-          res.status(200).send("Emails sent successfully");
-      } catch (e) {
-          console.log(e);
-          res.status(500).send("Internal Server Error");
-      }
-  });
-  
-  // Function to send bulk emails
-  async function sendBulkEmails(fromAddress, cid, emailSubject, emailHtmlContent, senderName, recipients, headers,mmid) {
-      // Create an array of promises for sending emails
-    //fromAddress, campaignResponse.id, emailSubject, emailHtmlContent, senderName, recipients, headers
-
-    
-      const emailPromises = recipients.map(async (recipient) => {
-          const recipientEmail = recipient; // Extract email from recipient metadata // Extract MMID from recipient metadata
-          // Extract CID from recipient metadata
-            console.log(recipient);
-            
-          if (!recipientEmail  || !cid) {
-              console.error(`Recipient metadata does not contain a valid email, MMID, or CID:`, recipient);
-              return; // Skip this recipient if email, MMID, or CID is invalid
-          }
-  
-          try {
-              const { data, error } = await resend.emails.send({
-                  from: `${senderName}" " <${fromAddress}>`, // Correctly formatted from address
-                  to: [recipientEmail], // Use the extracted email
-                  subject: `${emailSubject}`, // Use the provided subject
-                  html: `${emailHtmlContent}`, // Use the provided HTML content
-                  headers: {
-                      'MMID': `${mmid}`, // Attach custom MMID header
-                      'CID': `${cid}`, // Attach custom CID headerw1
-                  },
-              });
-
-           
-
-
-  
-              // Log the response
-              if (error) {
-                  console.error(`Error sending email to ${recipientEmail}:`, error);
-              } else {
-                  console.log(`Email sent successfully to ${recipientEmail} with MMID ${mmid}:`, data);
-              }
-          } catch (err) {
-              console.error(`An unexpected error occurred while sending email to ${recipientEmail}:`, err);
-          }
-      });
-  
-      // Wait for all email promises to resolve
-      await Promise.all(emailPromises);
-      ;
-      
-  }
-  
-
-  router.post("/analytics",async (cid)=>{
-
-    try{
-        let allcampaigns=await client.db('test_db').collection("Campaign_analytics");
-    
-        let data=await allcampaigns.find({}).toArray();
-    
-        res.send(data)
-       }catch(error){
-        console.log(error);
-       }
-
-
-  })
-
-  async function postCampaign(campaignData){
-
-    console.log(campaignData);
-    //type
-// "Event"
-// event
-// "viewedPage"
-// description
-// "123"
-// name
-// "dsa"
-
-        try {
-            // Generate a new ObjectId for _id and segment_id
-            const objId = new ObjectId();
-            campaignData._id = objId;
-           
-            campaignData.segment_id = objId.toString(); // Convert ObjectId to string for segment_id
-    
-            // Add creation timestamp in epoch format
-            campaignData.createdAt = Date.now(); // Epoch time in milliseconds
-    
-            // Check if the campaign already exists
-            const campaign = await client.db('test_db').collection("campaigns").findOne({ _id: campaignData._id });
-            if (campaign) {
-                res.status(400).send("Campaign is already registered");
-                return;
-            }
-    
-            const campaignType = campaignData.type;
-    
-            // Insert the new campaign
-            await client.db('test_db').collection("campaigns").insertOne(campaignData);
-    
-            // Insert the segment with a reference to the campaign
-            if (campaignType === "Event") {
-                await client.db('test_db').collection("segments").insertOne({
-                    segment_id: campaignData.segment_id,
-                    event: campaignData.event,
-                    createdAt: campaignData.createdAt // Optional: Include creation time in the segment
-                });
-            }
-    
-            return campaignData.segment_id;
-        } catch (e) {
-            console.log("Error:", e);
-            res.status(500).json({ "message": "Error adding campaign" });
+        if (error) {
+            console.error(`Error sending email to ${email}:`, error);
+            return { email, success: false, error };
         }
 
-  }
+        return { email, success: true, data };
+    } catch (err) {
+        console.error(`Unexpected error sending email to ${params.email}:`, err);
+        return { email: params.email, success: false, error: err };
+    }
+}
 
-  router.post("/createAndSendEmail", async (req, res) => {
+// Optimized bulk email sending with concurrency
+async function sendBulkEmails(fromAddress, cid, emailSubject, emailHtmlContent, senderName, recipients, headers, recipientType, recipientData, toAddress) {
+    console.log("-----------sending bulk emails-----------------");
+
+    try {
+        await client.connect();
+
+        let emailList = recipients;
+
+        // If recipient type is 'bunch', fetch emails from the database
+        if (recipientType === "bunch") {
+            const result = await client.db("test_db").collection("Users")
+                .find({ bunchID: recipientData.bunchID })
+                .toArray();
+
+            emailList = [...new Set(result.filter(user => user.email).map(user => user.email))];
+        }
+
+        // Remove already sent emails
+        const alreadySentEmails = await client.db("test_db").collection("AlreadySent")
+            .find({ email: { $in: emailList } })
+            .toArray();
+        const alreadySentSet = new Set(alreadySentEmails.map(item => item.email));
+
+        const filteredEmails = emailList.filter(email => !alreadySentSet.has(email));
+
+        console.log(`Preparing to send emails to ${filteredEmails.length} recipients`);
+
+        // Concurrent email sending with rate limiting
+        const emailParams = filteredEmails.map(email => ({
+            email,
+            fromAddress,
+            senderName,
+            emailSubject,
+            emailHtmlContent,
+            cid,
+            headers,
+            toAddress,
+        }));
+
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        const results = [];
+        for (let i = 0; i < emailParams.length; i++) {
+            const emailParam = emailParams[i];
+
+            try {
+                const result = await sendSingleEmail(emailParam);
+
+                // Record successful sends in AlreadySent collection
+                if (result.success) {
+                    await client.db("test_db").collection("AlreadySent")
+                        .insertOne({ email: emailParam.email });
+                }
+
+                results.push(result);
+
+            } catch (error) {
+                console.error(`Error sending email to ${emailParam.email}:`, error);
+                results.push({ email: emailParam.email, success: false, error });
+            }
+
+            // Enforce rate limit (2 requests per second)
+            if ((i + 1) % 2 === 0) {
+                await delay(1000); // Wait 1 second after every 2 emails
+            }
+        }
+
+        // Log summary
+        const successCount = results.filter(r => r.success).length;
+        const failureCount = results.filter(r => !r.success).length;
+
+        console.log(`Bulk email process completed.
+            Total attempts: ${results.length},
+            Successful: ${successCount},
+            Failed: ${failureCount}`);
+
+        return results;
+    } catch (err) {
+        console.error("Error in bulk email sending:", err);
+        throw err;
+    }
+}
+
+// Existing route handlers with minor modifications
+router.post("/sendEmails", async (req, res) => {
+    const {
+        campaignId,
+        emailSubject,
+        emailHtmlContent,
+        senderName,
+        recipientType,
+        recipientData,
+        recipients,
+        fromAddress,
+        headers,
+        toAddress
+    } = req.body;
+
+    try {
+        await sendBulkEmails(
+            fromAddress,
+            campaignId,
+            emailSubject,
+            emailHtmlContent,
+            senderName,
+            recipients || [],
+            headers,
+            recipientType,
+            recipientData || {},
+            toAddress
+        );
+
+        res.status(200).send("Emails sent successfully");
+    } catch (error) {
+        console.error("Email sending error:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+router.post("/createAndSendEmail", async (req, res) => {
     const {
         campaignData,
         emailSubject,
         emailHtmlContent,
         senderName,
+        recipientType,
+        recipientData,
         recipients,
         fromAddress,
         headers,
-        name,
-        description
+        toAddress
     } = req.body;
- 
+
     try {
-        const campaignResponse = await postCampaign(req.body); // Ensure this function handles creation correctly
-        console.log("Campaign created successfully:", campaignResponse);
-        console.log(campaignResponse);
+        const campaignResponse = await postCampaign(req.body);
         
-        await sendBulkEmails(fromAddress, campaignResponse, emailSubject, emailHtmlContent, senderName, recipients, headers,1223);
-        console.log("Emails sent successfully for campaign " + campaignResponse);
+        await sendBulkEmails(
+            fromAddress, 
+            campaignResponse, 
+            emailSubject, 
+            emailHtmlContent, 
+            senderName, 
+            recipients || [], 
+            headers, 
+            recipientType, 
+            recipientData || {},
+            toAddress
+        );
 
         res.status(200).json({
             message: 'Campaign created and emails sent successfully.',
@@ -203,38 +195,43 @@ const resend = new Resend('re_PiBtapnz_9noZZ3PifbaxYT8dfVkkDDF5');
         });
     } catch (error) {
         console.error("Error in createAndSendEmail:", error);
-        res.status(500).json({ message: 'Failed to create campaign and send emails.', error: error.message });
+        res.status(500).json({ 
+            message: 'Failed to create campaign and send emails.', 
+            error: error.message 
+        });
     }
 });
 
+// Existing postCampaign function (unchanged)
+async function postCampaign(campaignData) {
+    try {
+        const objId = new ObjectId();
+        campaignData._id = objId;
+        campaignData.segment_id = objId.toString();
+        campaignData.createdAt = Date.now();
 
+        const campaign = await client.db('test_db').collection("campaigns").findOne({ _id: campaignData._id });
+        if (campaign) {
+            throw new Error("Campaign is already registered");
+        }
 
-// async function test()
-// {
-//     const mmid=123;ss
-//    try{ const { data, error } = await resend.emails.send({
-//         from: `hue <comms@comms.marketme.site>`, // Correctly formatted from address
-//         to: ["rahul.dsu@gmail.com"], // Use the extracted email
-//         subject: "emailSubject", // Use the provided subject
-//         html: "<h1>hello<h1>", // Use the provided HTML content
-//         headers: {
-//             'MMID': `${mmid}`, // Attach custom MMID headerdas
-//             'CID': "123", // Attach custom CID headerdsa
-//         },
-//     });
-//     console.log(data);
-//     if(error){
-//         console.log(error);
-        
-//     }
-// }
-// catch(err){
-//     console.log(err);
-    
-// }
-// }
+        const campaignType = campaignData.type;
 
-// test();
+        await client.db('test_db').collection("campaigns").insertOne(campaignData);
 
-  module.exports = router;
-  
+        if (campaignType === "Event") {
+            await client.db('test_db').collection("segments").insertOne({
+                segment_id: campaignData.segment_id,
+                event: campaignData.event,
+                createdAt: campaignData.createdAt
+            });
+        }
+
+        return campaignData.segment_id;
+    } catch (e) {
+        console.error("Error in postCampaign:", e);
+        throw e;
+    }
+}
+
+module.exports = router;

@@ -1,277 +1,303 @@
 const express = require('express');
 const router = express.Router();
-
-const { MongoClient, ServerApiVersion , ObjectId } = require('mongodb');
-// MongoDB connectionssssds1ss
-require('dotenv').config()
-
-
-const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri);
-
-// Ensure the MongoDB client connects before starting the serverdeq
-async function connectToMongoDB() {
-  try {
-    await client.connect();
-    console.log("Successfully connected to MongoDB!");
-  } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
-  }
-}
-
-connectToMongoDB();
-
-
-router.get('/getAllCampaign',async (req,res)=>{
-   try{
-    let allcampaigns=await client.db('test_db').collection("campaigns");
-
-    let data=await allcampaigns.find({}).toArray();
-
-    res.send(data)
-   }catch(error){
-    console.log(error);
-   }
-})
-router.post('/getParticularCampaign',async (req,res)=>{
-    try{
-        let cid=req.body.cid;
-     let allcampaigns=await client.db('test_db').collection("campaigns");
-    const cdata=await allcampaigns.findOne({segment_id: cid});
-    
-     
-     console.log(cdata);
-     res.send(cdata)
-    }catch(error){
-     console.log(error);
-    }
- })
-
- 
- 
-
- router.post('/postCampaign', async (req, res) => {
+const {MongoDBNamespace } = require('mongodb');
+const { processSegment } = require('../Worker/SegmentProcess');
+const { ObjectId } = require('mongodb');
+router.get('/getAllCampaign', async (req, res) => {
     try {
-        //  channel , type ,  event || attribute , value ,  channel
-
-
-        const campaignData = req.body;
-
-        // Generate a new ObjectId for _id and segment_id
-        const objId = new ObjectId();
-        campaignData._id = objId;
-
-        campaignData.segment_id = objId.toString(); // Convert ObjectId to string for segment_id
-       
-        // Add creation timestamp in epoch format
-        campaignData.createdAt = Date.now(); // Epoch time in milliseconds
-
-        // Check if the campaign already exists
-        const campaign = await client.db('test_db').collection("campaigns").findOne({ _id: campaignData._id });
-        if (campaign) {
-            res.status(400).send("Campaign is already registered");
-            return;
-        }
-
-        const campaignType = campaignData.type;
-
-        // Insert the new campaign
-        await client.db('test_db').collection("campaigns").insertOne(campaignData);
-
-        // Insert the segment with a reference to the campaign
-        if (campaignType === "Event") {
-            await client.db('test_db').collection("segments").insertOne({
-                segment_id: campaignData.segment_id,
-                event: campaignData.event, 
-                value:    campaignData.value,
-                channel: campaignData.channel,
-                createdAt: campaignData.createdAt // Optional: Include creation time in the segment
-            });
-        }else{
-            await client.db('test_db').collection("segments").insertOne({
-                segment_id: campaignData.segment_id,
-                attribute: campaignData.attribute,
-                value: campaignData.value,
-                channel: campaignData.channel,
-                createdAt: campaignData.createdAt // Optional: Include creation time in the segment
-            });
-        }
-
-        res.json(campaignData.segment_id);
-    } catch (e) {
-        console.log("Error:", e);
-        res.status(500).json({ "message": "Error adding campaign" });
+        const campaigns = await req.tenantDB.collection("campaigns").find({}).toArray();
+        res.json(campaigns);
+    } catch (error) {
+        console.error('Error fetching campaigns:', error);
+        res.status(500).json({ error: 'Failed to retrieve campaigns' });
     }
 });
-router.post('/UIS/:segment_id', async (req, res) => {
+
+router.post('/getParticularCampaignSegment', async (req, res) => {
     try {
-        const segment_id = req.params.segment_id;
+      const { segment_id } = req.body;
+      if (!segment_id) {
+        return res.status(400).json({ error: 'Segment ID required' });
+      }
+  
+      let segmentObjectId;
+      try {
+        segmentObjectId = new ObjectId(segment_id);
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid segment ID format' });
+      }
+  
+      const data = await req.tenantDB.collection("segments").findOne({ _id: segmentObjectId });
+      if (data) {
+        res.json(data);
+      } else {
+        res.status(404).json({ error: 'Segment not found' });
+      }
+    } catch (error) {
+      console.error('Error fetching segment:', error);
+      res.status(500).json({ error: 'Failed to retrieve segment' });
+    }
+  });
+  router.post('/getParticularCampaign', async (req, res) => {
+    try {
+      const { cid } = req.body;
+      if (!cid) return res.status(400).json({ error: 'Campaign ID required' });
+  
+      // Convert cid to an ObjectId
+      let campaignId;
+      try {
+        campaignId = new ObjectId(cid);
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid Campaign ID format' });
+      }
+  
+      const campaign = await req.tenantDB.collection("campaigns").findOne({ _id: campaignId });
+      if (campaign) {
+        res.json(campaign);
+      } else {
+        res.status(404).json({ error: 'Campaign not found' });
+      }
+    } catch (error) {
+      console.error('Error fetching campaign:', error);
+      res.status(500).json({ error: 'Failed to retrieve campaign' });
+    }
+  });
 
-        // Search for segment info
-        const segment_info = await client.db('test_db').collection("campaigns").findOne({ segment_id: segment_id });
-
-        if (!segment_info) {
-            return res.status(404).json({ message: "Segment not found" });
+router.post('/postCampaign', async (req, res) => {
+    let session;
+    
+    try {
+        // Input validation
+        const campaignData = validateCampaignData(req.body);
+        if (!campaignData.success) {
+            return res.status(400).json({ 
+                error: 'Invalid campaign data', 
+                details: campaignData.errors 
+            });
         }
 
-        let users = [];
+        // Ensure tenant DB connection exists
+        if (!req.tenantDB?.client) {
+            throw new Error('Tenant database connection not available');
+        }
 
-        // Check if the segment is event-based or attribute-based
-        if (segment_info.event) {
-            // Fetch all user events
-            const audience = await client.db('test_db').collection("userEvent").find({}).toArray();
+        session = req.tenantDB.client.startSession();
+        const campaignId = new ObjectId();
+        const segmentId = new ObjectId();
 
-            // Iterate through each user's events and match with segment's event
-            for (const user of audience) {
-                const events = user.events;
+        const campaignDoc = {
+            _id: campaignId,
+            ...campaignData.data,
+            segment_id: segmentId,
+            createdAt: new Date(),
+            status: 'active',
+            analytics: { 
+                impression: 0,
+                delivered: 0,
+                failed: 0,
+                lastProcessed: null
+            }
+        };
 
-                // Check if any event matches the segment event
-                if (events.some(event => event.eventName === segment_info.value)) {
-                    users.push(user.MMID);  // Add user to the users array if event matches
-                }
+        const segmentDoc = {
+            _id: segmentId,
+            type: campaignData.data.type,
+            [campaignData.data.type]: campaignData.data[campaignData.data.type],
+            value: campaignData.data.value,
+            channel: campaignData.data.channel,
+            data: campaignData.data.data,
+            status: 'active',
+            createdAt: new Date(),
+            processedUsers: [],
+            lastProcessed: null
+        };
+
+        // Execute transaction
+        await session.withTransaction(async () => {
+            const campaignsCollection = req.tenantDB.collection("campaigns");
+            const segmentsCollection = req.tenantDB.collection("segments");
+
+            await Promise.all([
+                campaignsCollection.insertOne(campaignDoc, { session }),
+                segmentsCollection.insertOne(segmentDoc, { session })
+            ]);
+        });
+
+        // Process one-time campaigns
+        if (campaignData.data.oneTime) {
+            const tenant = {
+                dbName: req.tenantDB.databaseName,
+                apiKey: req.headers['x-api-key']
+            };
+
+            if (!tenant.apiKey) {
+                throw new Error('API key not found in request headers');
             }
 
-        } else {
-            // Segment is attribute-based
-            const typeOfAttribute = segment_info.attribute;
-            const valueOfAttribute = segment_info.value;
+            try {
+                await processSegment(tenant, segmentId.toString());
+                
+                // Update campaign status after processing
+                await req.tenantDB.collection("campaigns").updateOne(
+                    { _id: campaignId },
+                    { 
+                        $set: { 
+                            status: 'completed',
+                            'analytics.lastProcessed': new Date()
+                        }
+                    }
+                );
+            } catch (processError) {
+                console.error('Segment processing error:', processError);
+                // Don't fail the request, but include warning in response
+                return res.status(201).json({
+                    message: "Campaign created successfully, but segment processing failed",
+                    campaignId: campaignId.toString(),
+                    segmentId: segmentId.toString(),
+                    warning: "Initial segment processing failed. Will retry automatically."
+                });
+            }
+        }
 
-            // Use MongoDB query to directly find users based on attribute type and value
-            users = await client.db('test_db').collection("Users")
-                .find({ [typeOfAttribute]: valueOfAttribute })
-                .map(user => user.MMID)  // Directly extract MMID
+        res.status(201).json({
+            message: "Campaign created successfully",
+            campaignId: campaignId.toString(),
+            segmentId: segmentId.toString()
+        });
+
+    } catch (error) {
+        console.error('Campaign creation error:', error);
+        res.status(500).json({ 
+            error: 'Campaign creation failed',
+            details: error.message,
+            code: error.code
+        });
+    } finally {
+        if (session) {
+            await session.endSession().catch(err => 
+                console.error('Error ending session:', err)
+            );
+        }
+    }
+});
+
+// Campaign data validation
+function validateCampaignData(data) {
+    const errors = [];
+    
+    if (!data.type) errors.push('Campaign type is required');
+    if (!data.channel) errors.push('Channel is required');
+    if (!data.value || !Array.isArray(data.value)) errors.push('Valid segment value array is required');
+    
+    // Validate template data for WhatsApp channel
+    if (data.channel === 'whatsapp') {
+        if (!data.data?.templateID) errors.push('Template ID is required for WhatsApp campaigns');
+        if (!data.data?.type) errors.push('Message type is required for WhatsApp campaigns');
+    }
+
+    return {
+        success: errors.length === 0,
+        errors,
+        data: errors.length === 0 ? data : null
+    };}
+router.post('/UIS/:segment_id', async (req, res) => {
+    try {
+        const { segment_id } = req.params;
+        const segment = await req.tenantDB.collection("campaigns").findOne({ segment_id });
+        if (!segment) return res.status(404).json({ error: 'Segment not found' });
+
+        let users = [];
+        if (segment.event) {
+            users = await req.tenantDB.collection("userEvent")
+                .aggregate([
+                    { $match: { 'events.eventName': segment.value } },
+                    { $group: { _id: "$MMID" } },
+                    { $project: { _id: 0, MMID: "$_id" } }
+                ]).toArray();
+        } else {
+            users = await req.tenantDB.collection("Users")
+                .find({ [segment.attribute]: segment.value })
+                .project({ MMID: 1, _id: 0 })
                 .toArray();
         }
 
-        // Update the segment with the list of matched users
-        try {
-            const updateResult = await client.db('test_db').collection("segments").updateOne(
-                { segment_id: segment_info.segment_id },  // Match the segment by ID
-                { $set: { users: users } }               // Set the users field with the matched users
-            );
+        const mmids = users.map(u => u.MMID);
+        await req.tenantDB.collection("segments").updateOne(
+            { segment_id },
+            { $set: { users: mmids } }
+        );
 
-            if (updateResult.acknowledged) {
-                res.send(users);  // Send back the list of users
-            } else {
-                res.status(500).json({ message: "Failed to update segment info with users." });
-            }
-
-        } catch (e) {
-            console.error(e);
-            res.status(500).json({ message: "Error updating segment with users." });
-        }
-
+        res.json(mmids);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error fetching UIS" });
+        console.error('Error updating segment:', error);
+        res.status(500).json({ error: 'Failed to update segment' });
     }
 });
 
-
-router.get('/getCampaignsForUser', async function(req, res) {
-    //http://localhost:3000/campaigns//getCampaignsForUser?MMID=1223
-    
+router.get('/getCampaignsForUser', async (req, res) => {
     try {
-        const userId = req.query.MMID;
-        console.log(userId);
+        const MMID = req.query.MMID;
+        if (!MMID) return res.status(400).json({ error: 'MMID required' });
 
-        // Fetch all segments
-        const segments = await client.db('test_db').collection("segments").find({}).toArray();
+        const segments = await req.tenantDB.collection("segments")
+            .find({ users: MMID })
+            .project({ segment_id: 1 })
+            .toArray();
+
+        res.json(segments.map(s => s.segment_id));
+    } catch (error) {
+        console.error('Error fetching user campaigns:', error);
+        res.status(500).json({ error: 'Failed to retrieve campaigns' });
+    }
+});
+
+router.post('/updateAnalytics', async (req, res) => {
+    try {
+        const { cid } = req.body;
+        const result = await req.tenantDB.collection("campaigns").updateOne(
+            { segment_id: cid },
+            { $inc: { 'analytics.impression': 1 } }
+        );
         
-        let campaignsForUserIds = [];
-
-        // Iterate over each segment
-        for (let i = 0; i < segments.length; i++) {
-            const segment = segments[i];
-            
-            // Check if userId exists in the segment's users array
-            if (segment.users && segment.users.length>0 && segment.users.includes(userId)) {
-                campaignsForUserIds.push(segment.segment_id);
-            }
-        }
-
-        console.log(campaignsForUserIds);
-        res.send(campaignsForUserIds);
-
+        result.modifiedCount === 1 
+            ? res.json({ message: 'Analytics updated' })
+            : res.status(404).json({ error: 'Campaign not found' });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Failed to get campaigns for user." });
+        console.error('Error updating analytics:', error);
+        res.status(500).json({ error: 'Failed to update analytics' });
     }
 });
 
-
-
-router.post('/updateAnalytics', async function(req, res) {
-    const cid = req.body.cid;
-
+router.delete('/deleteCampaign', async (req, res) => {
     try {
-        // Find the campaign by segment_id
-        const campaign = await client.db('test_db').collection("campaigns").findOne({ segment_id: cid });
-
-        if (campaign) {
-            // Check if the analytics object exists
-            if (!campaign.analytics) {
-                // If analytics doesn't exist, create it with impression set to 1
-                campaign.analytics = { impression: 1 };
-            } else {
-                // If analytics exists, increase the impression count by 1
-                if (campaign.analytics.impression) {
-                    campaign.analytics.impression += 1;
-                } else {
-                    // If impression doesn't exist, initialize it to 1
-                    campaign.analytics.impression = 1;
-                }
-            }
-
-            // Update the campaign with the new analytics data
-            await client.db('test_db').collection("campaigns").updateOne(
-                { segment_id: cid },
-                { $set: { analytics: campaign.analytics } }
-            );
-
-            // Send the updated campaign data as a response
-            return res.status(200).json({ message: "Campaign updated", campaign });
-        } else {
-            // If the campaign is not found, return a 404 status code
-            return res.status(404).json({ message: "Campaign not found" });
+        const { segment_id } = req.body;
+        const session = req.tenantDB.client.startSession();
+        if(!segment_id){
+            res.status(400).json({message: 'Segment ID is required'});
         }
-    } catch (err) {
-        // If there's an error, return a 500 status code with the error message
-        return res.status(500).json({ message: "Couldn't update the analytics" });
+        let segmentObjectId;
+        try {
+          segmentObjectId = new ObjectId(segment_id);
+        } catch (e) {
+          return res.status(400).json({ error: 'Invalid segment ID format' });
+        }
+    
+        
+        try {
+            await session.withTransaction(async () => {
+                const cd=await req.tenantDB.collection("campaigns").deleteOne({ segment_id: segment_id });
+                await req.tenantDB.collection("segments").deleteOne({ _id: segmentObjectId });
+                console.log(cd);
+                
+            });
+            res.json({ message: 'Campaign deleted successfully' });
+        } finally {
+            await session.endSession();
+        }
+    } catch (error) {
+        console.error('Error deleting campaign:', error);
+        res.status(500).json({ error: 'Failed to delete campaign' });
     }
 });
 
-
-router.delete('/deleteCampaign', async function(req, res) {
-    const cid = req.body.cid;
-
-    try {
-        // Connect to the database
-        await client.connect();
-        const db = client.db('test_db');
-
-        // Delete the campaign from the "campaigns" collection
-        const campaignDeleteResult = await db.collection("campaigns").deleteOne({ segment_id: cid });
-
-        // Delete the campaign from the "segments" collection
-        const segmentDeleteResult = await db.collection("segments").deleteOne({ segment_id: cid });
-
-        // Check if any documents were deleted
-        if (campaignDeleteResult.deletedCount === 0 && segmentDeleteResult.deletedCount === 0) {
-            return res.status(404).json({ message: "No campaign or segment found with the given ID" });
-        }
-
-        // Respond with success if the deletion was successful
-        return res.status(200).json({ message: "Campaign and segment deleted successfully" });
-    } catch (err) {
-        // Handle errors and respond with a 500 status code
-        console.error("Error deleting campaign and segment:", err);
-        return res.status(500).json({ message: "An error occurred while deleting the campaign and segment" });
-    } 
-});
-
-
-
-
-
-module.exports=router;
+module.exports = router;

@@ -1,131 +1,161 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const { createClient } = require('redis'); // Import from redis padckage
 require('dotenv').config();
 
-// Redis connectioneq
-const redisClient = createClient({
-    password: process.env.redis_password,
-    socket: {
-        host: 'redis-16608.c273.us-east-1-2.ec2.redns.redis-cloud.com',
-        port: 16608
-    }
-});
-
-// MongoDB connection
-const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri);
-
-// Ensure the MongoDB client connects before starting the server
-async function connectToMongoDB() {
-  try {
-    await client.connect();
-    console.log("Successfully connected to MongoDB!");
-  } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
-  }
-}
-
-// Ensure Redis client connects
-async function connectToRedis() {
-  try {
-    await redisClient.connect();
-    console.log("Successfully connected to Redis!");
-  } catch (error) {
-    console.error("Error connecting to Redis:", error);
-  }
-}
-
-connectToMongoDB();
-connectToRedis();
 router.post('/addEvent', async function (req, res) {
     try {
-       
-        let userEventDone = req.body;
-        const eventTime = Math.floor(Date.now() / 1000); // Add creation time in epoch format
-        userEventDone.EventTime = eventTime; // Add event time to the userEventDone object
-        let id = userEventDone.mmid;
+        const db = req.tenantDB; // Get tenant-specific DB from middleware
+        const userEventDone = req.body;
+        const eventTime = Math.floor(Date.now() / 1000);
+        userEventDone.eventTime = eventTime;
 
-        const eventName = userEventDone.eventName; // Assuming eventName is part of the request body
-        const eventEntry = { eventTime, eventName }; // Create an event entry object
+        const collection = db.collection('all_events_done');
+        await collection.insertOne(userEventDone);
 
-        // Fetch existing events from Redis
-        let existingEvents = await redisClient.hGet(`userEvents`, id);
-        existingEvents = existingEvents ? JSON.parse(existingEvents) : [];
-
-        // Add new event to the existing events array
-        existingEvents.push(eventEntry);
-
-        // Store the updated events array in Redisw
-        await redisClient.hSet(`userEvents`, id, JSON.stringify(existingEvents));
-
-        console.log("Event cached in Redis", eventEntry);
-
-        res.status(201).json({ message: "Event added successfully to redis" });
+        console.log("Event added to tenant DB:", userEventDone);
+        res.status(201).json({ message: "Event added successfully" });
     } catch (error) {
-        console.log(error);
+        console.error("Error adding event:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 });
 
-
-
-
 router.get('/userEvents', async function (req, res) {
     try {
-        const db = client.db('test_db');
-        const userEvent = db.collection('userEvent');
-        const MMID = req.query.mmid; // Get the MMID from the query parameters
-       
+        const db = req.tenantDB; // Tenant-specific DB
+        const MMID = req.query.mmid;
+
         if (!MMID) {
             return res.status(400).send({ error: "MMID is required" });
         }
 
-        const users = await userEvent.find({}).toArray();
+        const data = await db.collection('all_events_done')
+                            .find({ MMID: MMID })
+                            .toArray();
 
-        for(let i=0;i<users.length;i++){
-            if(users[i].mmid==`${MMID}`){
-                console.log(users[i]);
-               return  res.status(200).json(users[i].events);
-            }
-        }
-
-        
-       
-            return res.status(404).send({ error: "User not found" });
-        
-
-
+        res.status(200).json({ data: data });
     } catch (error) {
         console.log(error);
         res.status(500).send({ error: "Failed to get user events" });
     }
 });
 
-
-
 router.post('/getEvents', async function (req, res) {
-    const event = req.body.eName;
-    console.log(event);
-    
-    const db = client.db('test_db');
-    const eventCollection = await db.collection('all_events_done').find({}).toArray();
-    
-
     try {
-        // Use filter to get the matching events
-        const data = eventCollection.filter(e => e.eventName === event);
+        const db = req.tenantDB; // Tenant-specific DB
+        const event = req.body.eName;
+        
+        const eventCollection = await db.collection('all_events_done')
+                                      .find({ eventName: event })
+                                      .toArray();
 
-
-        // Send the response with the filtered data
-        return res.status(200).json({ data:data});
+        res.status(200).json({ data: eventCollection });
     } catch (error) {
-        console.log("Error in getting events from collection:", error);
-
-        return res.status(500).json({ error: error.message });
+        console.log("Error getting events:", error);
+        res.status(500).json({ error: error.message });
     }
 });
 
+router.post('/saveSale', async function (req, res) {
+    try {
+      const db = req.tenantDB; // Tenant-specific DB
+      const saleData = req.body;
+  
+      // Add the time at which the event was done
+      saleData.eventTime = new Date(); // or saleData.createdAt = new Date();
+  
+      const result = await db.collection('Sale').insertOne(saleData);
+      res.status(200).send({ 
+        message: "Sale uploaded successfully", 
+        insertedId: result.insertedId 
+      });
+    } catch (error) {
+      console.error('Error saving sale:', error);
+      res.status(500).send({ error: 'Failed to save sale' });
+    }
+  });
+  
+
+router.post('/getSale', async function (req, res) {
+    try {
+        const db = req.tenantDB; // Tenant-specific DB
+        const durationInDays = req.body.durationInDays;
+        const cutoffDate = new Date(Date.now() - durationInDays * 24 * 60 * 60 * 1000);
+        const allSales = await db.collection('Sale').find({}).toArray(); // Fetch all sales
+
+        res.status(200).send(allSales);
+    } catch (error) {
+        console.error('Error fetching sales:', error);
+        res.status(500).send({ error: 'Failed to fetch sales' });
+    }
+});
+
+// Add route to get recent sales/invoices
+router.get('/recentSales', async (req, res) => {
+  try {
+    console.log('recentSales endpoint hit, request headers:', req.headers);
+    
+    if (!req.tenantDB) {
+      console.error('Error: tenantDB is not available in request');
+      return res.status(500).json({ success: false, error: 'tenantDB is not available' });
+    }
+    
+    const db = req.tenantDB; // Tenant-specific DB
+    console.log('tenantDB available:', db.databaseName);
+    
+    try {
+      // Check if the Sale collection exists
+      const collections = await db.listCollections({ name: 'Sale' }).toArray();
+      console.log('Collections check result:', collections);
+      
+      if (collections.length === 0) {
+        // Sale collection doesn't exist, return empty array
+        console.log('Sale collection does not exist, returning empty array');
+        return res.status(200).json({ success: true, data: [] });
+      }
+      
+      console.log('Sale collection exists, proceeding with query');
+      const recentSales = await db.collection('Sale')
+        .find({})
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .toArray();
+      
+      console.log(`Found ${recentSales.length} recent sales`);
+      
+      // Enrich with customer data
+      const enrichedSales = await Promise.all(
+        recentSales.map(async (sale) => {
+          try {
+            const customer = await db.collection('users').findOne({ MMID: sale.MMID });
+            return {
+              ...sale,
+              customerName: customer ? customer.name : 'Unknown',
+              customerPhone: customer ? customer.mobile_number : 'N/A',
+              customerEmail: customer ? customer.email : 'N/A'
+            };
+          } catch (error) {
+            console.error('Error fetching customer data:', error);
+            return {
+              ...sale,
+              customerName: 'Unknown',
+              customerPhone: 'N/A',
+              customerEmail: 'N/A'
+            };
+          }
+        })
+      );
+      
+      console.log('Successfully enriched sales data');
+      res.status(200).json({ success: true, data: enrichedSales });
+    } catch (innerError) {
+      console.error('Inner error in recentSales:', innerError);
+      res.status(500).json({ success: false, error: 'Internal server error', details: innerError.message });
+    }
+  } catch (error) {
+    console.error('Error fetching recent sales:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch recent sales', details: error.message });
+  }
+});
 
 module.exports = router;
